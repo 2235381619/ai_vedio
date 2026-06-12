@@ -1,0 +1,5 @@
+spring:
+  config:
+    name: myAgent-app
+  profiles:
+    active: dev

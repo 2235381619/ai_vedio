@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音交互测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        #startBtn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        #startBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+        #stopBtn {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+        #stopBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(235, 51, 73, 0.4);
+        }
+        #cancelBtn {
+            background: #6c757d;
+            color: white;
+        }
+        #cancelBtn:hover {
+            background: #5a6268;
+        }
+        #textInput {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        #sendTextBtn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .status {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.recording {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .messages {
+            height: 300px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        .message.user {
+            background: #e3f2fd;
+            text-align: right;
+        }
+        .message.ai {
+            background: #fff3e0;
+        }
+        .message.system {
+            background: #f1f8e9;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .audio-player {
+            margin-top: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 语音交互测试</h1>
+        
+        <div id="status" class="status disconnected">未连接</div>
+        
+        <div class="controls">
+            <button id="startBtn">🔴 开始录音</button>
+            <button id="stopBtn" disabled>⏹️ 停止录音</button>
+            <button id="cancelBtn" disabled>❌ 取消</button>
+        </div>
+        
+        <input type="text" id="textInput" placeholder="或输入文字消息...">
+        <button id="sendTextBtn">📤 发送文字</button>
+        
+        <div class="messages" id="messages"></div>
+    </div>
+
+    <script>
+        let ws;
+        let mediaRecorder;
+        let audioChunks = [];
+        let sessionId = null;
+
+        const statusDiv = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const textInput = document.getElementById('textInput');
+        const sendTextBtn = document.getElementById('sendTextBtn');
+        const messagesDiv = document.getElementById('messages');
+
+        function connect() {
+            ws = new WebSocket('ws://localhost:8091/ws/speech');
+            
+            ws.onopen = function() {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '已连接';
+            };
+            
+            ws.onmessage = function(event) {
+                if (event.data instanceof Blob) {
+                    playAudio(event.data);
+                } else {
+                    const data = JSON.parse(event.data);
+                    handleMessage(data);
+                }
+            };
+            
+            ws.onclose = function() {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '已断开';
+                sessionId = null;
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function handleMessage(data) {
+            if (data.type === 'connected') {
+                sessionId = data.sessionId;
+                addMessage('system', '会话已建立: ' + sessionId);
+            } else if (data.type === 'asr_result') {
+                addMessage('user', '识别结果: ' + data.text + ' (置信度: ' + data.confidence + ')');
+            } else if (data.type === 'tts_done') {
+                addMessage('ai', 'AI回复: ' + data.text);
+            } else if (data.type === 'error') {
+                addMessage('system', '错误: ' + data.message);
+            }
+        }
+
+        function addMessage(type, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+            messageDiv.textContent = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function playAudio(blob) {
+            const audio = new Audio(URL.createObjectURL(blob));
+            audio.play();
+            
+            const audioPlayer = document.createElement('audio');
+            audioPlayer.className = 'audio-player';
+            audioPlayer.src = URL.createObjectURL(blob);
+            audioPlayer.controls = true;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            messageDiv.innerHTML = '🎵 AI语音回复:<br>';
+            messageDiv.appendChild(audioPlayer);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function startRecording() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                connect();
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    sampleRate: 16000,
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true
+                }
+            });
+
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = function(event) {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async function() {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const byteArray = new Uint8Array(arrayBuffer);
+                
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(byteArray);
+                    addMessage('user', '🎤 正在识别...');
+                }
+                
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start(100);
+            statusDiv.className = 'status recording';
+            statusDiv.textContent = '正在录音...';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            cancelBtn.disabled = false;
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '已停止录音';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                cancelBtn.disabled = true;
+            }
+        }
+
+        function cancelRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                audioChunks = [];
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'cancel' }));
+            }
+            
+            statusDiv.className = 'status connected';
+            statusDiv.textContent = '已取消';
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            cancelBtn.disabled = true;
+        }
+
+        function sendText() {
+            const text = textInput.value.trim();
+            if (!text) return;
+            
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                connect();
+            }
+            
+            setTimeout(() => {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'text', message: text }));
+                    addMessage('user', '📝 文字消息: ' + text);
+                    textInput.value = '';
+                }
+            }, 200);
+        }
+
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+        cancelBtn.addEventListener('click', cancelRecording);
+        sendTextBtn.addEventListener('click', sendText);
+        
+        textInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendText();
+            }
+        });
+
+        connect();
+    </script>
+</body>
+</html>

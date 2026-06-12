@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>RAG 知识库 - 切片预览</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .card-full { grid-column: 1 / -1; }
+        h2 { font-size: 16px; margin-bottom: 16px; color: #1a1a1a; display: flex; align-items: center; gap: 8px; }
+        label { display: block; font-size: 13px; margin-bottom: 4px; color: #666; }
+        textarea, input, select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+        textarea:focus, input:focus, select:focus { border-color: #4f6ef7; }
+        textarea { font-family: 'Courier New', monospace; font-size: 13px; resize: vertical; min-height: 120px; }
+        .row { display: flex; gap: 12px; margin-bottom: 12px; }
+        .row > * { flex: 1; }
+        .mb { margin-bottom: 12px; }
+        button { padding: 10px 24px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; background: #4f6ef7; color: #fff; }
+        button:hover { background: #3b5de7; }
+        button.secondary { background: #e8ecf1; color: #333; }
+        button.secondary:hover { background: #d5dce6; }
+        .result { grid-column: 1 / -1; }
+        .chunk { border: 1px solid #e8ecf1; border-radius: 6px; margin-bottom: 8px; padding: 12px; }
+        .chunk:hover { border-color: #4f6ef7; }
+        .chunk-header { font-size: 12px; color: #999; margin-bottom: 6px; display: flex; gap: 8px; }
+        .chunk-header .tag { background: #e8ecf1; padding: 2px 8px; border-radius: 4px; }
+        .chunk-content { font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+        .meta-grid { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: #888; }
+        .status { padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; display: none; }
+        .status.error { background: #fee; color: #c00; display: block; }
+        .status.success { background: #efe; color: #090; display: block; }
+        .status.loading { background: #eef; color: #44f; display: block; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } .row { flex-direction: column; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 上传区 -->
+    <div class="card">
+        <h2>📄 上传文档入库</h2>
+        <div class="mb">
+            <label>文档文件</label>
+            <input type="file" id="uploadFile">
+        </div>
+        <div class="row">
+            <div>
+                <label>文档名称</label>
+                <input type="text" id="uploadDocName" placeholder="如 财报.pdf">
+            </div>
+            <div>
+                <label>切片策略</label>
+                <select id="uploadStrategy"></select>
+            </div>
+        </div>
+        <button onclick="upload()">上传入库</button>
+        <div class="status" id="uploadStatus"></div>
+    </div>
+
+    <!-- 预览区 -->
+    <div class="card">
+        <h2>✂️ 切片预览</h2>
+        <div class="mb">
+            <label>策略</label>
+            <select id="previewStrategy"></select>
+        </div>
+        <div class="mb">
+            <label>文本内容</label>
+            <textarea id="previewContent" rows="6" placeholder="输入要切分的文本..."></textarea>
+        </div>
+        <div class="row">
+            <div>
+                <label>Chunk Size (token)</label>
+                <input type="number" id="chunkSize" value="500">
+            </div>
+            <div>
+                <label>Overlap</label>
+                <input type="number" id="overlap" value="50">
+            </div>
+        </div>
+        <div class="row" id="semanticConfig" style="display:none;">
+            <div>
+                <label>语义相似度阈值 (越高切得越细)</label>
+                <input type="number" id="similarityThreshold" value="0.5" step="0.05" min="0" max="1">
+            </div>
+            <div>
+                <label>语义缓冲区大小 (token)</label>
+                <input type="number" id="bufferSize" value="200">
+            </div>
+        </div>
+        <button onclick="preview()">预览切片</button>
+        <button class="secondary" onclick="loadStrategies()">刷新策略列表</button>
+        <div class="status" id="previewStatus"></div>
+    </div>
+
+    <!-- 结果区 -->
+    <div class="card-full result">
+        <h2>📦 切片结果 <span id="chunkCount" style="font-weight:normal;font-size:13px;color:#999;"></span></h2>
+        <div id="resultList"></div>
+    </div>
+</div>
+
+<script>
+async function api(path, opts = {}) {
+    const res = await fetch('http://localhost:8091' + path, {
+        ...opts,
+        headers: { ...opts.headers, 'Accept': 'application/json' }
+    });
+    return res.json();
+}
+
+// 加载策略列表
+async function loadStrategies() {
+    const data = await api('/api/rag/strategies');
+    if (data.code !== '0000') return;
+    const html = data.data.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    document.getElementById('uploadStrategy').innerHTML = html;
+    document.getElementById('previewStrategy').innerHTML = html;
+    onStrategyChange();
+}
+
+// 上传文档
+async function upload() {
+    const file = document.getElementById('uploadFile').files[0];
+    const docName = document.getElementById('uploadDocName').value || file.name;
+    const splitterName = document.getElementById('uploadStrategy').value;
+    const status = document.getElementById('uploadStatus');
+
+    if (!file) { status.className = 'status error'; status.textContent = '请选择文件'; return; }
+
+    status.className = 'status loading'; status.textContent = '上传中...';
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('docName', docName);
+    form.append('splitterName', splitterName);
+
+    try {
+        const data = await api('/api/rag/upload', { method: 'POST', body: form });
+        status.className = 'status ' + (data.code === '0000' ? 'success' : 'error');
+        status.textContent = data.code === '0000' ? '✅ 上传成功，已入库' : '❌ ' + data.info;
+    } catch (e) {
+        status.className = 'status error';
+        status.textContent = '❌ 请求失败: ' + e.message;
+    }
+}
+
+// 预览切片
+async function preview() {
+    const splitterName = document.getElementById('previewStrategy').value;
+    const content = document.getElementById('previewContent').value;
+    const status = document.getElementById('previewStatus');
+    const resultList = document.getElementById('resultList');
+
+    if (!content.trim()) { status.className = 'status error'; status.textContent = '请输入文本'; return; }
+
+    status.className = 'status loading'; status.textContent = '切片中...';
+
+    const body = {
+        content,
+        splitterName,
+        chunkSize: parseInt(document.getElementById('chunkSize').value) || 500,
+        overlap: parseInt(document.getElementById('overlap').value) || 50,
+        similarityThreshold: parseFloat(document.getElementById('similarityThreshold').value) || undefined,
+        bufferSize: parseInt(document.getElementById('bufferSize').value) || undefined,
+    };
+
+    try {
+        const data = await api('/api/rag/preview', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (data.code !== '0000') {
+            status.className = 'status error';
+            status.textContent = '❌ ' + data.info;
+            return;
+        }
+
+        status.className = 'status success';
+        status.textContent = '✅ 共 ' + data.data.length + ' 个切片';
+        document.getElementById('chunkCount').textContent = '（共 ' + data.data.length + ' 块）';
+
+        resultList.innerHTML = data.data.map((chunk, i) => {
+            const meta = chunk.metadata || {};
+            const tags = Object.entries(meta)
+                .filter(([k]) => k !== 'source')
+                .map(([k, v]) => `<span class="tag">${k}: ${v}</span>`)
+                .join('');
+            return `<div class="chunk">
+                <div class="chunk-header">
+                    <span class="tag" style="background:#4f6ef7;color:#fff;">#${i}</span>
+                    ${tags}
+                </div>
+                <div class="chunk-content">${escapeHtml(chunk.content)}</div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        status.className = 'status error';
+        status.textContent = '❌ 请求失败: ' + e.message;
+    }
+}
+
+function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
+// 切换策略时显示/隐藏语义配置项
+function onStrategyChange() {
+    const val = document.getElementById('previewStrategy').value;
+    document.getElementById('semanticConfig').style.display = val === 'semantic' ? 'flex' : 'none';
+}
+
+document.getElementById('previewStrategy').addEventListener('change', onStrategyChange);
+
+loadStrategies();
+
+// 自动粘贴模板文本
+document.getElementById('previewContent').value =
+`# Spring AI RAG 介绍
+
+## 什么是 RAG
+
+检索增强生成（Retrieval Augmented Generation）是一种将检索系统与生成模型结合的架构。
+
+### 核心流程
+
+1. 用户提出问题
+2. 系统从知识库中检索相关文档
+3. 将检索结果作为上下文注入 Prompt
+4. 大模型基于上下文生成回答
+
+## ETL Pipeline
+
+ETL 是 RAG 的数据处理支柱，包含三个步骤：
+
+- Extract：从 PDF、Word 等源抽取文本
+- Transform：文本分割、清洗、增强
+- Load：向量化后存入向量数据库`;
+</script>
+</body>
+</html>
