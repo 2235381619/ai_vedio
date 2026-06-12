@@ -8,7 +8,9 @@ public interface SessionRepository {
     SessionEntity create(SessionEntity session);
     SessionEntity findById(String sessionId);
     SessionEntity update(SessionEntity session);
-    void deleteById(String sessionId);
+    void delete(String sessionId);
     List<SessionEntity> findByUserId(String userId);
+    List<SessionEntity> findByStatus(SessionEntity.SessionStatus status);
+    boolean exists(String sessionId);
     void cleanupExpired(long maxIdleMs);
 }

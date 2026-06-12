@@ -1,1 +1,336 @@
 26-06-13.00:13:13.037 [scheduling-1    ] INFO  SessionServiceImpl     - 清理过期会话: sessionId=ec7c39340ed24a58
+26-06-13.00:18:09.665 [SpringApplicationShutdownHook] INFO  GracefulShutdown       - Commencing graceful shutdown. Waiting for active requests to complete
+26-06-13.00:18:09.861 [tomcat-shutdown ] INFO  GracefulShutdown       - Graceful shutdown complete
+26-06-13.00:18:09.889 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown initiated...
+26-06-13.00:18:09.901 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown completed.
+26-06-13.00:28:19.763 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 15712 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:28:19.764 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:28:21.534 [main            ] WARN  ClassPathMapperScanner - No MyBatis mapper was found in '[cn.bugstack.ai]' package. Please check your configuration.
+26-06-13.00:28:22.700 [main            ] INFO  TomcatWebServer        - Tomcat initialized with port 8091 (http)
+26-06-13.00:28:22.735 [main            ] INFO  Http11NioProtocol      - Initializing ProtocolHandler ["http-nio-8091"]
+26-06-13.00:28:22.737 [main            ] INFO  StandardService        - Starting service [Tomcat]
+26-06-13.00:28:22.737 [main            ] INFO  StandardEngine         - Starting Servlet engine: [Apache Tomcat/10.1.36]
+26-06-13.00:28:22.906 [main            ] INFO  [/]                    - Initializing Spring embedded WebApplicationContext
+26-06-13.00:28:22.906 [main            ] INFO  ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3092 ms
+26-06-13.00:28:23.030 [main            ] INFO  SessionServiceImpl     - Session 服务初始化完成
+26-06-13.00:28:23.058 [main            ] INFO  TtsServiceImpl         - TTS 服务初始化完成
+26-06-13.00:28:23.060 [main            ] WARN  AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'speechWebSocketHandler' defined in file [C:\code\myAgent\myAgent-app\target\classes\cn\bugstack\ai\config\SpeechWebSocketHandler.class]: Unsatisfied dependency expressed through constructor parameter 2: No qualifying bean of type 'cn.bugstack.ai.domain.agent.service.ICameraFrameService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+26-06-13.00:28:23.062 [main            ] INFO  StandardService        - Stopping service [Tomcat]
+26-06-13.00:28:23.090 [main            ] INFO  ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+26-06-13.00:28:23.136 [main            ] ERROR LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 2 of constructor in cn.bugstack.ai.config.SpeechWebSocketHandler required a bean of type 'cn.bugstack.ai.domain.agent.service.ICameraFrameService' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'cn.bugstack.ai.domain.agent.service.ICameraFrameService' in your configuration.
+
+26-06-13.00:29:40.889 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 22692 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:29:40.891 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:29:41.575 [main            ] WARN  AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: Error processing condition on org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration.propertySourcesPlaceholderConfigurer
+26-06-13.00:29:41.582 [main            ] INFO  ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+26-06-13.00:29:41.597 [main            ] ERROR SpringApplication      - Application run failed
+java.lang.IllegalStateException: Error processing condition on org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration.propertySourcesPlaceholderConfigurer
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:60)
+	at org.springframework.context.annotation.ConditionEvaluator.shouldSkip(ConditionEvaluator.java:99)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForBeanMethod(ConfigurationClassBeanDefinitionReader.java:184)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:145)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:121)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:430)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+	at cn.bugstack.ai.Application.main(Application.java:14)
+Caused by: java.lang.IllegalStateException: Failed to introspect Class [cn.bugstack.ai.config.WebSocketConfig] from ClassLoader [jdk.internal.loader.ClassLoaders$AppClassLoader@1d44bcfa]
+	at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:483)
+	at org.springframework.util.ReflectionUtils.doWithMethods(ReflectionUtils.java:360)
+	at org.springframework.util.ReflectionUtils.getUniqueDeclaredMethods(ReflectionUtils.java:417)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.lambda$getTypeForFactoryMethod$1(AbstractAutowireCapableBeanFactory.java:751)
+	at java.base/java.util.concurrent.ConcurrentHashMap.computeIfAbsent(ConcurrentHashMap.java:1740)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.getTypeForFactoryMethod(AbstractAutowireCapableBeanFactory.java:750)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:683)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:654)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1704)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:618)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:590)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.collectBeanDefinitionsForType(OnBeanCondition.java:332)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getBeanDefinitionsForType(OnBeanCondition.java:324)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getBeanDefinitionsForType(OnBeanCondition.java:314)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getMatchingBeans(OnBeanCondition.java:213)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.evaluateConditionalOnMissingBean(OnBeanCondition.java:196)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getMatchOutcome(OnBeanCondition.java:143)
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:47)
+	... 17 common frames omitted
+Caused by: java.lang.NoClassDefFoundError: SessionIdHandshakeInterceptor
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3404)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2506)
+	at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:465)
+	... 34 common frames omitted
+Caused by: java.lang.ClassNotFoundException: SessionIdHandshakeInterceptor
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 38 common frames omitted
+26-06-13.00:32:35.112 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 29232 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:32:35.114 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:32:35.834 [main            ] WARN  AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: java.lang.IllegalStateException: Error processing condition on org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration.propertySourcesPlaceholderConfigurer
+26-06-13.00:32:35.840 [main            ] INFO  ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+26-06-13.00:32:35.855 [main            ] ERROR SpringApplication      - Application run failed
+java.lang.IllegalStateException: Error processing condition on org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration.propertySourcesPlaceholderConfigurer
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:60)
+	at org.springframework.context.annotation.ConditionEvaluator.shouldSkip(ConditionEvaluator.java:99)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForBeanMethod(ConfigurationClassBeanDefinitionReader.java:184)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitionsForConfigurationClass(ConfigurationClassBeanDefinitionReader.java:145)
+	at org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader.loadBeanDefinitions(ConfigurationClassBeanDefinitionReader.java:121)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.processConfigBeanDefinitions(ConfigurationClassPostProcessor.java:430)
+	at org.springframework.context.annotation.ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry(ConfigurationClassPostProcessor.java:290)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors(PostProcessorRegistrationDelegate.java:349)
+	at org.springframework.context.support.PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(PostProcessorRegistrationDelegate.java:118)
+	at org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors(AbstractApplicationContext.java:791)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:609)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+	at cn.bugstack.ai.Application.main(Application.java:14)
+Caused by: java.lang.IllegalStateException: Failed to introspect Class [cn.bugstack.ai.config.WebSocketConfig] from ClassLoader [jdk.internal.loader.ClassLoaders$AppClassLoader@1d44bcfa]
+	at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:483)
+	at org.springframework.util.ReflectionUtils.doWithMethods(ReflectionUtils.java:360)
+	at org.springframework.util.ReflectionUtils.getUniqueDeclaredMethods(ReflectionUtils.java:417)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.lambda$getTypeForFactoryMethod$1(AbstractAutowireCapableBeanFactory.java:751)
+	at java.base/java.util.concurrent.ConcurrentHashMap.computeIfAbsent(ConcurrentHashMap.java:1708)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.getTypeForFactoryMethod(AbstractAutowireCapableBeanFactory.java:750)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineTargetType(AbstractAutowireCapableBeanFactory.java:683)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.predictBeanType(AbstractAutowireCapableBeanFactory.java:654)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.isFactoryBean(AbstractBeanFactory.java:1704)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doGetBeanNamesForType(DefaultListableBeanFactory.java:618)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBeanNamesForType(DefaultListableBeanFactory.java:590)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.collectBeanDefinitionsForType(OnBeanCondition.java:332)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getBeanDefinitionsForType(OnBeanCondition.java:324)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getBeanDefinitionsForType(OnBeanCondition.java:314)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getMatchingBeans(OnBeanCondition.java:213)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.evaluateConditionalOnMissingBean(OnBeanCondition.java:196)
+	at org.springframework.boot.autoconfigure.condition.OnBeanCondition.getMatchOutcome(OnBeanCondition.java:143)
+	at org.springframework.boot.autoconfigure.condition.SpringBootCondition.matches(SpringBootCondition.java:47)
+	... 17 common frames omitted
+Caused by: java.lang.NoClassDefFoundError: SessionIdHandshakeInterceptor
+	at java.base/java.lang.Class.getDeclaredMethods0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredMethods(Class.java:3404)
+	at java.base/java.lang.Class.getDeclaredMethods(Class.java:2506)
+	at org.springframework.util.ReflectionUtils.getDeclaredMethods(ReflectionUtils.java:465)
+	... 34 common frames omitted
+Caused by: java.lang.ClassNotFoundException: SessionIdHandshakeInterceptor
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 38 common frames omitted
+26-06-13.00:34:59.538 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 24592 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:34:59.539 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:35:00.756 [main            ] WARN  ClassPathMapperScanner - No MyBatis mapper was found in '[cn.bugstack.ai]' package. Please check your configuration.
+26-06-13.00:35:01.414 [main            ] INFO  TomcatWebServer        - Tomcat initialized with port 8091 (http)
+26-06-13.00:35:01.429 [main            ] INFO  Http11NioProtocol      - Initializing ProtocolHandler ["http-nio-8091"]
+26-06-13.00:35:01.431 [main            ] INFO  StandardService        - Starting service [Tomcat]
+26-06-13.00:35:01.431 [main            ] INFO  StandardEngine         - Starting Servlet engine: [Apache Tomcat/10.1.36]
+26-06-13.00:35:01.525 [main            ] INFO  [/]                    - Initializing Spring embedded WebApplicationContext
+26-06-13.00:35:01.525 [main            ] INFO  ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1947 ms
+26-06-13.00:35:01.593 [main            ] WARN  AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'speechWebSocketHandler': Resolution of declared constructors on bean Class [cn.bugstack.ai.config.SpeechWebSocketHandler] from ClassLoader [jdk.internal.loader.ClassLoaders$AppClassLoader@1d44bcfa] failed
+26-06-13.00:35:01.597 [main            ] INFO  StandardService        - Stopping service [Tomcat]
+26-06-13.00:35:01.624 [main            ] INFO  ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+26-06-13.00:35:01.655 [main            ] ERROR SpringApplication      - Application run failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'speechWebSocketHandler': Resolution of declared constructors on bean Class [cn.bugstack.ai.config.SpeechWebSocketHandler] from ClassLoader [jdk.internal.loader.ClassLoaders$AppClassLoader@1d44bcfa] failed
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.determineCandidateConstructors(AutowiredAnnotationBeanPostProcessor.java:384)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.determineConstructorsFromBeanPostProcessors(AbstractAutowireCapableBeanFactory.java:1320)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBeanInstance(AbstractAutowireCapableBeanFactory.java:1215)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:563)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:523)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:346)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1155)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1121)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1056)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146)
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+	at cn.bugstack.ai.Application.main(Application.java:14)
+Caused by: java.lang.NoClassDefFoundError: WebSocketSessionManager
+	at java.base/java.lang.Class.getDeclaredConstructors0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredConstructors(Class.java:3375)
+	at java.base/java.lang.Class.getDeclaredConstructors(Class.java:2557)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.determineCandidateConstructors(AutowiredAnnotationBeanPostProcessor.java:379)
+	... 20 common frames omitted
+Caused by: java.lang.ClassNotFoundException: WebSocketSessionManager
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 24 common frames omitted
+26-06-13.00:36:18.220 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 26824 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:36:18.221 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:36:19.168 [main            ] WARN  ClassPathMapperScanner - No MyBatis mapper was found in '[cn.bugstack.ai]' package. Please check your configuration.
+26-06-13.00:36:19.680 [main            ] INFO  TomcatWebServer        - Tomcat initialized with port 8091 (http)
+26-06-13.00:36:19.693 [main            ] INFO  Http11NioProtocol      - Initializing ProtocolHandler ["http-nio-8091"]
+26-06-13.00:36:19.694 [main            ] INFO  StandardService        - Starting service [Tomcat]
+26-06-13.00:36:19.695 [main            ] INFO  StandardEngine         - Starting Servlet engine: [Apache Tomcat/10.1.36]
+26-06-13.00:36:19.774 [main            ] INFO  [/]                    - Initializing Spring embedded WebApplicationContext
+26-06-13.00:36:19.774 [main            ] INFO  ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1512 ms
+26-06-13.00:36:19.851 [main            ] INFO  SessionServiceImpl     - Session 服务初始化完成
+26-06-13.00:36:19.870 [main            ] INFO  TtsServiceImpl         - TTS 服务初始化完成
+26-06-13.00:36:20.554 [main            ] INFO  HikariDataSource       - HikariPool-1 - Starting...
+26-06-13.00:36:20.725 [main            ] INFO  HikariPool             - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7904ee3c
+26-06-13.00:36:20.726 [main            ] INFO  HikariDataSource       - HikariPool-1 - Start completed.
+26-06-13.00:36:20.983 [main            ] INFO  PgVectorStore          - Using the vector table name: vector_store. Is empty: false
+26-06-13.00:36:20.986 [main            ] INFO  PgVectorStore          - Initializing PGVectorStore schema for table: vector_store in schema: public
+26-06-13.00:36:20.987 [main            ] INFO  PgVectorStore          - vectorTableValidationsEnabled false
+26-06-13.00:36:21.163 [main            ] INFO  OptionalValidatorFactoryBean - Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+26-06-13.00:36:21.619 [main            ] INFO  Http11NioProtocol      - Starting ProtocolHandler ["http-nio-8091"]
+26-06-13.00:36:21.628 [main            ] INFO  TomcatWebServer        - Tomcat started on port 8091 (http) with context path '/'
+26-06-13.00:36:21.639 [main            ] INFO  Application            - Started Application in 4.097 seconds (process running for 4.867)
+26-06-13.00:40:19.656 [SpringApplicationShutdownHook] INFO  GracefulShutdown       - Commencing graceful shutdown. Waiting for active requests to complete
+26-06-13.00:40:19.848 [tomcat-shutdown ] INFO  GracefulShutdown       - Graceful shutdown complete
+26-06-13.00:40:19.853 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown initiated...
+26-06-13.00:40:19.859 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown completed.
+26-06-13.00:40:25.235 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 25728 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:40:25.237 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:40:27.041 [main            ] WARN  ClassPathMapperScanner - No MyBatis mapper was found in '[cn.bugstack.ai]' package. Please check your configuration.
+26-06-13.00:40:27.725 [main            ] INFO  TomcatWebServer        - Tomcat initialized with port 8091 (http)
+26-06-13.00:40:27.740 [main            ] INFO  Http11NioProtocol      - Initializing ProtocolHandler ["http-nio-8091"]
+26-06-13.00:40:27.742 [main            ] INFO  StandardService        - Starting service [Tomcat]
+26-06-13.00:40:27.742 [main            ] INFO  StandardEngine         - Starting Servlet engine: [Apache Tomcat/10.1.36]
+26-06-13.00:40:27.828 [main            ] INFO  [/]                    - Initializing Spring embedded WebApplicationContext
+26-06-13.00:40:27.828 [main            ] INFO  ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2541 ms
+26-06-13.00:40:27.913 [main            ] INFO  SessionServiceImpl     - Session 服务初始化完成
+26-06-13.00:40:27.935 [main            ] INFO  TtsServiceImpl         - TTS 服务初始化完成
+26-06-13.00:40:28.553 [main            ] INFO  HikariDataSource       - HikariPool-1 - Starting...
+26-06-13.00:40:28.695 [main            ] INFO  HikariPool             - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@c1cc7ee
+26-06-13.00:40:28.696 [main            ] INFO  HikariDataSource       - HikariPool-1 - Start completed.
+26-06-13.00:40:29.044 [main            ] INFO  PgVectorStore          - Using the vector table name: vector_store. Is empty: false
+26-06-13.00:40:29.049 [main            ] INFO  PgVectorStore          - Initializing PGVectorStore schema for table: vector_store in schema: public
+26-06-13.00:40:29.049 [main            ] INFO  PgVectorStore          - vectorTableValidationsEnabled false
+26-06-13.00:40:29.212 [main            ] INFO  OptionalValidatorFactoryBean - Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+26-06-13.00:40:29.662 [main            ] INFO  Http11NioProtocol      - Starting ProtocolHandler ["http-nio-8091"]
+26-06-13.00:40:29.670 [main            ] INFO  TomcatWebServer        - Tomcat started on port 8091 (http) with context path '/'
+26-06-13.00:40:29.682 [main            ] INFO  Application            - Started Application in 5.172 seconds (process running for 5.985)
+26-06-13.00:43:32.227 [SpringApplicationShutdownHook] INFO  GracefulShutdown       - Commencing graceful shutdown. Waiting for active requests to complete
+26-06-13.00:43:32.404 [tomcat-shutdown ] INFO  GracefulShutdown       - Graceful shutdown complete
+26-06-13.00:43:32.408 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown initiated...
+26-06-13.00:43:32.413 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown completed.
+26-06-13.00:43:35.931 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 22052 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:43:35.933 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:43:37.425 [main            ] WARN  ClassPathMapperScanner - No MyBatis mapper was found in '[cn.bugstack.ai]' package. Please check your configuration.
+26-06-13.00:43:37.993 [main            ] INFO  TomcatWebServer        - Tomcat initialized with port 8091 (http)
+26-06-13.00:43:38.008 [main            ] INFO  Http11NioProtocol      - Initializing ProtocolHandler ["http-nio-8091"]
+26-06-13.00:43:38.010 [main            ] INFO  StandardService        - Starting service [Tomcat]
+26-06-13.00:43:38.010 [main            ] INFO  StandardEngine         - Starting Servlet engine: [Apache Tomcat/10.1.36]
+26-06-13.00:43:38.100 [main            ] INFO  [/]                    - Initializing Spring embedded WebApplicationContext
+26-06-13.00:43:38.101 [main            ] INFO  ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2106 ms
+26-06-13.00:43:38.189 [main            ] INFO  SessionServiceImpl     - Session 服务初始化完成
+26-06-13.00:43:38.211 [main            ] INFO  TtsServiceImpl         - TTS 服务初始化完成
+26-06-13.00:43:38.904 [main            ] INFO  HikariDataSource       - HikariPool-1 - Starting...
+26-06-13.00:43:39.061 [main            ] INFO  HikariPool             - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@306ac1c8
+26-06-13.00:43:39.062 [main            ] INFO  HikariDataSource       - HikariPool-1 - Start completed.
+26-06-13.00:43:39.364 [main            ] INFO  PgVectorStore          - Using the vector table name: vector_store. Is empty: false
+26-06-13.00:43:39.369 [main            ] INFO  PgVectorStore          - Initializing PGVectorStore schema for table: vector_store in schema: public
+26-06-13.00:43:39.369 [main            ] INFO  PgVectorStore          - vectorTableValidationsEnabled false
+26-06-13.00:43:39.506 [main            ] INFO  OptionalValidatorFactoryBean - Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+26-06-13.00:43:39.925 [main            ] INFO  Http11NioProtocol      - Starting ProtocolHandler ["http-nio-8091"]
+26-06-13.00:43:39.934 [main            ] INFO  TomcatWebServer        - Tomcat started on port 8091 (http) with context path '/'
+26-06-13.00:43:39.944 [main            ] INFO  Application            - Started Application in 4.86 seconds (process running for 6.536)
+26-06-13.00:44:28.278 [http-nio-8091-exec-1] INFO  [/]                    - Initializing Spring DispatcherServlet 'dispatcherServlet'
+26-06-13.00:44:28.278 [http-nio-8091-exec-1] INFO  DispatcherServlet      - Initializing Servlet 'dispatcherServlet'
+26-06-13.00:44:28.280 [http-nio-8091-exec-1] INFO  DispatcherServlet      - Completed initialization in 1 ms
+26-06-13.00:44:31.405 [http-nio-8091-exec-4] INFO  ChatController         - 创建会话: userId=anonymous
+26-06-13.00:44:31.406 [http-nio-8091-exec-4] INFO  SessionServiceImpl     - 创建会话: sessionId=43de8963d6dd49ba, userId=anonymous, type=VIDEO
+26-06-13.00:44:31.487 [http-nio-8091-exec-5] INFO  SpeechWebSocketHandler - WebSocket 连接已建立: sessionId=43de8963d6dd49ba
+26-06-13.00:44:36.444 [http-nio-8091-exec-6] INFO  AsrServiceImpl         - 结束 ASR 会话: sessionId=43de8963d6dd49ba
+26-06-13.00:44:36.444 [http-nio-8091-exec-6] INFO  SessionServiceImpl     - 关闭会话: sessionId=43de8963d6dd49ba
+26-06-13.00:44:36.444 [http-nio-8091-exec-6] INFO  TtsServiceImpl         - 结束 TTS 会话: sessionId=43de8963d6dd49ba
+26-06-13.00:44:36.445 [http-nio-8091-exec-6] INFO  SpeechWebSocketHandler - WebSocket 连接已关闭: sessionId=43de8963d6dd49ba, status=CloseStatus[code=1009, reason=The decoded text message was too big for the output buffer and the endpoint does not support partial messages]
+26-06-13.00:46:08.279 [SpringApplicationShutdownHook] INFO  GracefulShutdown       - Commencing graceful shutdown. Waiting for active requests to complete
+26-06-13.00:46:08.449 [tomcat-shutdown ] INFO  GracefulShutdown       - Graceful shutdown complete
+26-06-13.00:46:08.453 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown initiated...
+26-06-13.00:46:08.477 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown completed.
+26-06-13.00:47:09.085 [main            ] INFO  Application            - Starting Application using Java 17.0.17 with PID 17708 (C:\code\myAgent\myAgent-app\target\classes started by kqj in C:\code\myAgent)
+26-06-13.00:47:09.088 [main            ] INFO  Application            - The following 1 profile is active: "dev"
+26-06-13.00:47:10.032 [main            ] WARN  ClassPathMapperScanner - No MyBatis mapper was found in '[cn.bugstack.ai]' package. Please check your configuration.
+26-06-13.00:47:10.582 [main            ] INFO  TomcatWebServer        - Tomcat initialized with port 8091 (http)
+26-06-13.00:47:10.596 [main            ] INFO  Http11NioProtocol      - Initializing ProtocolHandler ["http-nio-8091"]
+26-06-13.00:47:10.599 [main            ] INFO  StandardService        - Starting service [Tomcat]
+26-06-13.00:47:10.599 [main            ] INFO  StandardEngine         - Starting Servlet engine: [Apache Tomcat/10.1.36]
+26-06-13.00:47:10.688 [main            ] INFO  [/]                    - Initializing Spring embedded WebApplicationContext
+26-06-13.00:47:10.689 [main            ] INFO  ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1560 ms
+26-06-13.00:47:10.781 [main            ] INFO  SessionServiceImpl     - Session 服务初始化完成
+26-06-13.00:47:10.802 [main            ] INFO  TtsServiceImpl         - TTS 服务初始化完成
+26-06-13.00:47:11.396 [main            ] INFO  HikariDataSource       - HikariPool-1 - Starting...
+26-06-13.00:47:11.532 [main            ] INFO  HikariPool             - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@25e9f618
+26-06-13.00:47:11.534 [main            ] INFO  HikariDataSource       - HikariPool-1 - Start completed.
+26-06-13.00:47:11.790 [main            ] INFO  PgVectorStore          - Using the vector table name: vector_store. Is empty: false
+26-06-13.00:47:11.794 [main            ] INFO  PgVectorStore          - Initializing PGVectorStore schema for table: vector_store in schema: public
+26-06-13.00:47:11.794 [main            ] INFO  PgVectorStore          - vectorTableValidationsEnabled false
+26-06-13.00:47:11.934 [main            ] INFO  OptionalValidatorFactoryBean - Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+26-06-13.00:47:12.354 [main            ] INFO  Http11NioProtocol      - Starting ProtocolHandler ["http-nio-8091"]
+26-06-13.00:47:12.362 [main            ] INFO  TomcatWebServer        - Tomcat started on port 8091 (http) with context path '/'
+26-06-13.00:47:12.376 [main            ] INFO  Application            - Started Application in 4.001 seconds (process running for 4.772)
+26-06-13.00:47:49.841 [http-nio-8091-exec-1] INFO  [/]                    - Initializing Spring DispatcherServlet 'dispatcherServlet'
+26-06-13.00:47:49.841 [http-nio-8091-exec-1] INFO  DispatcherServlet      - Initializing Servlet 'dispatcherServlet'
+26-06-13.00:47:49.842 [http-nio-8091-exec-1] INFO  DispatcherServlet      - Completed initialization in 1 ms
+26-06-13.00:47:51.838 [http-nio-8091-exec-3] INFO  ChatController         - 创建会话: userId=anonymous
+26-06-13.00:47:51.839 [http-nio-8091-exec-3] INFO  SessionServiceImpl     - 创建会话: sessionId=983a11eef773409b, userId=anonymous, type=VIDEO
+26-06-13.00:47:51.938 [http-nio-8091-exec-4] INFO  SpeechWebSocketHandler - WebSocket 连接已建立: sessionId=983a11eef773409b
+26-06-13.00:47:54.311 [http-nio-8091-exec-5] INFO  SpeechWebSocketHandler - 开始流式语音识别: sessionId=983a11eef773409b
+26-06-13.00:47:54.312 [http-nio-8091-exec-5] INFO  AsrServiceImpl         - 启动流式 ASR: sessionId=983a11eef773409b
+26-06-13.00:48:05.481 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AsrServiceImpl         - ASR 流式识别到内容: sessionId=983a11eef773409b, text=我手上是什么？
+26-06-13.00:48:05.482 [OkHttp https://dashscope.aliyuncs.com/...] INFO  SpeechWebSocketHandler - ASR 识别到内容: sessionId=983a11eef773409b, text=我手上是什么？
+26-06-13.00:48:05.489 [OkHttp https://dashscope.aliyuncs.com/...] INFO  SpeechWebSocketHandler - ASR 识别文本: sessionId=983a11eef773409b, text=我手上是什么？
+26-06-13.00:48:05.490 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AgentFlowServiceImpl   - AgentFlow 处理请求: sessionId=983a11eef773409b, text=我手上是什么？
+26-06-13.00:48:06.264 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AgentFlowConfig        - RouterNode 决策: input=我手上是什么？, route=vision
+26-06-13.00:48:06.269 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AgentFlowConfig        - VisionNode 开始处理: sessionId=983a11eef773409b
+26-06-13.00:48:06.269 [OkHttp https://dashscope.aliyuncs.com/...] INFO  VisionTool             - 截帧请求: sessionId=983a11eef773409b
+26-06-13.00:48:08.729 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AgentFlowServiceImpl   - 视觉处理完成: sessionId=983a11eef773409b, response=你手上拿着的是一个黑色的头戴式耳机。耳机的耳罩部分较大，看起来是封闭式的，适合隔音和沉浸式听音体验。你似乎正把耳机放在嘴边，可能是在调整麦克风或准备说话。耳机通过一根线连接，可能是用于有线音频传输或麦...
+26-06-13.00:48:08.730 [OkHttp https://dashscope.aliyuncs.com/...] INFO  SpeechWebSocketHandler - Agent 响应: sessionId=983a11eef773409b, agentType=VISION, response=你手上拿着的是一个黑色的头戴式耳机。耳机的耳罩部分较大，看起来是封闭式的，适合隔音和沉浸式听音体验。你似乎正把耳机放在嘴边，可能是在调整麦克风或准备说话。耳机通过一根线连接，可能是用于有线音频传输或麦...
+26-06-13.00:48:08.731 [OkHttp https://dashscope.aliyuncs.com/...] INFO  TtsServiceImpl         - 开始语音合成: sessionId=983a11eef773409b, text=你手上拿着的是一个黑色的头戴式耳机。耳机的耳罩部分较大，看起来是封闭式的，适合隔音和沉浸式听音体验。你似乎正把耳机放在嘴边，可能是在调整麦克风或准备说话。耳机通过一根线连接，可能是用于有线音频传输或麦克风输入。
+26-06-13.00:49:13.055 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AsrServiceImpl         - ASR 流式识别到内容: sessionId=983a11eef773409b, text=嗯。
+26-06-13.00:49:13.055 [OkHttp https://dashscope.aliyuncs.com/...] INFO  SpeechWebSocketHandler - ASR 识别到内容: sessionId=983a11eef773409b, text=嗯。
+26-06-13.00:49:13.055 [OkHttp https://dashscope.aliyuncs.com/...] INFO  SpeechWebSocketHandler - ASR 识别文本: sessionId=983a11eef773409b, text=嗯。
+26-06-13.00:49:13.056 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AgentFlowServiceImpl   - AgentFlow 处理请求: sessionId=983a11eef773409b, text=嗯。
+26-06-13.00:49:13.420 [OkHttp https://dashscope.aliyuncs.com/...] INFO  AgentFlowConfig        - RouterNode 决策: input=嗯。, route=text
+26-06-13.00:49:14.173 [OkHttp https://dashscope.aliyuncs.com/...] WARN  AgentFlowServiceImpl   - 工作流无法提取有效响应: sessionId=983a11eef773409b
+26-06-13.00:49:14.173 [OkHttp https://dashscope.aliyuncs.com/...] INFO  SpeechWebSocketHandler - Agent 响应: sessionId=983a11eef773409b, agentType=TEXT, response=抱歉，我暂时无法回答这个问题。
+26-06-13.00:49:14.173 [OkHttp https://dashscope.aliyuncs.com/...] INFO  TtsServiceImpl         - 开始语音合成: sessionId=983a11eef773409b, text=抱歉，我暂时无法回答这个问题。
+26-06-13.00:49:56.861 [SpringApplicationShutdownHook] INFO  GracefulShutdown       - Commencing graceful shutdown. Waiting for active requests to complete
+26-06-13.00:49:57.034 [tomcat-shutdown ] INFO  GracefulShutdown       - Graceful shutdown complete
+26-06-13.00:49:57.038 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown initiated...
+26-06-13.00:49:57.043 [SpringApplicationShutdownHook] INFO  HikariDataSource       - HikariPool-1 - Shutdown completed.
+26-06-13.00:49:57.048 [SpringApplicationShutdownHook] INFO  AsrServiceImpl         - 结束 ASR 会话: sessionId=983a11eef773409b
+26-06-13.00:49:57.048 [SpringApplicationShutdownHook] INFO  SessionServiceImpl     - 关闭会话: sessionId=983a11eef773409b

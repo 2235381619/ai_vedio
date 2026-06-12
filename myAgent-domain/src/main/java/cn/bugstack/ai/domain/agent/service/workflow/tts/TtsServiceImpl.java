@@ -1,9 +1,9 @@
 package cn.bugstack.ai.domain.agent.service.workflow.tts;
 
-import cn.bugstack.ai.domain.agent.model.entity.SessionEntity;
 import cn.bugstack.ai.domain.agent.model.entity.TtsRequestEntity;
 import cn.bugstack.ai.domain.agent.model.entity.TtsResponseEntity;
-import cn.bugstack.ai.domain.agent.service.workflow.session.ISessionService;
+import cn.bugstack.ai.domain.agent.service.ITtsService;
+import cn.bugstack.ai.domain.agent.service.ISessionService;
 import com.alibaba.dashscope.audio.qwen_tts_realtime.QwenTtsRealtime;
 import com.alibaba.dashscope.audio.qwen_tts_realtime.QwenTtsRealtimeConfig;
 import com.alibaba.dashscope.audio.qwen_tts_realtime.QwenTtsRealtimeParam;

@@ -2,7 +2,8 @@ package cn.bugstack.ai.domain.agent.service.workflow.asr;
 
 import cn.bugstack.ai.domain.agent.model.entity.AsrRequestEntity;
 import cn.bugstack.ai.domain.agent.model.entity.AsrResponseEntity;
-import cn.bugstack.ai.domain.agent.service.workflow.session.ISessionService;
+import cn.bugstack.ai.domain.agent.service.IAsrService;
+import cn.bugstack.ai.domain.agent.service.ISessionService;
 import com.alibaba.dashscope.audio.asr.recognition.Recognition;
 import com.alibaba.dashscope.audio.asr.recognition.RecognitionParam;
 import com.alibaba.dashscope.audio.asr.recognition.RecognitionResult;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 
 @Service
 @Slf4j
@@ -28,6 +30,7 @@ public class AsrServiceImpl implements IAsrService {
     private String apiKey;
 
     private final Map<String, Recognition> connectionMap = new ConcurrentHashMap<>();
+    private final Map<String, Consumer<AsrResponseEntity>> streamingCallbacks = new ConcurrentHashMap<>();
 
     private final ISessionService sessionService;
 
@@ -117,6 +120,7 @@ public class AsrServiceImpl implements IAsrService {
     @Override
     public void endSession(String sessionId) {
         log.info("结束 ASR 会话: sessionId={}", sessionId);
+        streamingCallbacks.remove(sessionId);
         sessionService.closeSession(sessionId);
         Recognition recognition = connectionMap.remove(sessionId);
         if (recognition != null) {
@@ -133,6 +137,65 @@ public class AsrServiceImpl implements IAsrService {
     public void cancelSession(String sessionId) {
         log.info("取消 ASR 会话: sessionId={}", sessionId);
         endSession(sessionId);
+    }
+
+    @Override
+    public void startStreaming(String sessionId, Consumer<AsrResponseEntity> callback) {
+        log.info("启动流式 ASR: sessionId={}", sessionId);
+        streamingCallbacks.put(sessionId, callback);
+
+        Recognition recognition = connectionMap.computeIfAbsent(sessionId, k -> new Recognition());
+        try {
+            recognition.call(param, new ResultCallback<RecognitionResult>() {
+                @Override
+                public void onEvent(RecognitionResult result) {
+                    if (result.isSentenceEnd()) {
+                        String text = result.getSentence().getText();
+                        if (text != null && !text.isBlank()) {
+                            log.info("ASR 流式识别到内容: sessionId={}, text={}", sessionId, text);
+                            AsrResponseEntity response = AsrResponseEntity.builder()
+                                    .sessionId(sessionId)
+                                    .text(text)
+                                    .confidence(0.0)
+                                    .isFinal(result.isSentenceEnd())
+                                    .build();
+                            Consumer<AsrResponseEntity> cb = streamingCallbacks.get(sessionId);
+                            if (cb != null) {
+                                cb.accept(response);
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onComplete() {
+                    log.debug("ASR 流式识别完成: sessionId={}", sessionId);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    log.error("ASR 流式识别错误: sessionId={}", sessionId, e);
+                }
+            });
+        } catch (Exception e) {
+            log.error("启动流式 ASR 失败: sessionId={}", sessionId, e);
+            streamingCallbacks.remove(sessionId);
+        }
+    }
+
+    @Override
+    public void sendAudioChunk(String sessionId, byte[] audioData) {
+        Recognition recognition = connectionMap.get(sessionId);
+        if (recognition != null) {
+            try {
+                ByteBuffer buffer = ByteBuffer.wrap(audioData);
+                recognition.sendAudioFrame(buffer);
+            } catch (Exception e) {
+                log.warn("发送 ASR 音频帧失败: sessionId={}", sessionId, e);
+            }
+        } else {
+            log.warn("ASR 连接不存在，丢弃音频帧: sessionId={}", sessionId);
+        }
     }
 
 }

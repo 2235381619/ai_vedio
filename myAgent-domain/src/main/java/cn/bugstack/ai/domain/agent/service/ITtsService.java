@@ -1,4 +1,4 @@
-package cn.bugstack.ai.domain.agent.service.workflow.tts;
+package cn.bugstack.ai.domain.agent.service;
 
 import cn.bugstack.ai.domain.agent.model.entity.TtsRequestEntity;
 import cn.bugstack.ai.domain.agent.model.entity.TtsResponseEntity;

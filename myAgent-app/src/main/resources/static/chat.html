@@ -11,52 +11,46 @@
             background: #0f0f0f; color: #e0e0e0; height: 100vh; overflow: hidden;
         }
         .container { display: flex; height: 100vh; }
-        .main { flex: 1; display: flex; flex-direction: column; padding: 16px; min-width: 0; }
-        .sidebar {
-            width: 360px; background: #1a1a1a; border-left: 1px solid #2a2a2a;
-            display: flex; flex-direction: column; flex-shrink: 0;
+        .main {
+            flex: 1; display: flex; flex-direction: column;
+            min-width: 0; border-right: 1px solid #2a2a2a;
         }
         .video-container {
-            flex: 1; background: #000; border-radius: 12px; position: relative;
-            overflow: hidden; min-height: 400px;
+            flex: 1; background: #000; position: relative;
+            overflow: hidden; min-height: 300px;
         }
         .video-container video {
             width: 100%; height: 100%; object-fit: cover;
         }
         .video-overlay {
-            position: absolute; bottom: 16px; left: 16px; right: 16px;
+            position: absolute; bottom: 12px; left: 12px; right: 12px;
             display: flex; gap: 8px; flex-wrap: wrap;
         }
         .video-overlay .badge {
-            background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; font-size: 12px;
+            background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 4px; font-size: 12px;
         }
         .badge.active { color: #4caf50; }
+        .divider { height: 1px; background: #2a2a2a; margin: 0; }
         .controls {
-            display: flex; gap: 8px; padding: 12px 0; flex-wrap: wrap;
+            padding: 12px 16px; display: flex; gap: 8px; align-items: center;
+            background: #1a1a1a; flex-shrink: 0;
         }
         .controls button {
             padding: 8px 16px; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 13px; transition: all 0.2s;
+            cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;
         }
         .controls button:hover { opacity: 0.85; }
+        .controls button:disabled { opacity: 0.35; cursor: not-allowed; }
         .btn-primary { background: #1a73e8; color: white; }
         .btn-danger { background: #d32f2f; color: white; }
-        .btn-success { background: #2e7d32; color: white; }
-        .btn-secondary { background: #424242; color: white; }
-        .controls button:disabled { opacity: 0.4; cursor: not-allowed; }
-        .log-container {
-            flex: 1; overflow-y: auto; padding: 12px;
-            background: #121212; border-radius: 8px; min-height: 200px;
+        .btn-secondary { background: #555; color: white; }
+        .sidebar {
+            width: 360px; background: #1a1a1a;
+            display: flex; flex-direction: column; flex-shrink: 0;
         }
-        .log-entry { margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
-        .log-entry.user { color: #81c784; }
-        .log-entry.ai { color: #64b5f6; }
-        .log-entry.system { color: #bdbdbd; font-style: italic; font-size: 12px; }
-        .log-entry.error { color: #e57373; }
-        .log-time { color: #616161; margin-right: 8px; font-size: 11px; }
         .sidebar-header {
-            padding: 12px 16px; border-bottom: 1px solid #2a2a2a;
-            font-size: 14px; font-weight: 600;
+            padding: 12px 16px; font-size: 14px; font-weight: 600;
+            border-bottom: 1px solid #2a2a2a;
         }
         .connection-bar {
             padding: 8px 16px; display: flex; gap: 12px; align-items: center;
@@ -66,6 +60,16 @@
         .status-connected { background: #1b5e20; color: #81c784; }
         .status-disconnected { background: #b71c1c; color: #ef9a9a; }
         .status-error { background: #e65100; color: #ffcc80; }
+        .log-container {
+            flex: 1; overflow-y: auto; padding: 12px;
+            background: #121212;
+        }
+        .log-entry { margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+        .log-entry.user { color: #81c784; }
+        .log-entry.ai { color: #64b5f6; }
+        .log-entry.system { color: #bdbdbd; font-style: italic; font-size: 12px; }
+        .log-entry.error { color: #e57373; }
+        .log-time { color: #616161; margin-right: 8px; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -74,22 +78,23 @@
         <div class="video-container">
             <video id="localVideo" autoplay playsinline muted></video>
             <div class="video-overlay">
-                <span class="badge" id="statusBadge">📷 摄像头: 未开启</span>
-                <span class="badge" id="micBadge">🎤 麦克风: 未开启</span>
-                <span class="badge" id="fpsBadge">📸 帧率: 0 fps</span>
+                <span class="badge" id="statusBadge">摄像头: 未开启</span>
+                <span class="badge" id="micBadge">麦克风: 未开启</span>
+                <span class="badge" id="fpsBadge">帧率: 0 fps</span>
             </div>
-            <div class="controls">
-                <button id="btnConnect" class="btn-primary" onclick="connect()">连接 WebSocket</button>
-                <button id="btnDisconnect" class="btn-danger" onclick="disconnect()" disabled>断开连接</button>
-                <button id="btnCamera" class="btn-secondary" onclick="toggleCamera()" disabled>打开摄像头</button>
-                <button id="btnMic" class="btn-secondary" onclick="toggleMic()" disabled>打开麦克风</button>
-            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="controls">
+            <button id="btnConnect" class="btn-primary" onclick="connect()">连接 WebSocket</button>
+            <button id="btnDisconnect" class="btn-danger" onclick="disconnect()" disabled>断开连接</button>
+            <button id="btnCamera" class="btn-secondary" onclick="toggleCamera()" disabled>摄像头</button>
+            <button id="btnMic" class="btn-secondary" onclick="toggleMic()" disabled>麦克风</button>
         </div>
     </div>
     <div class="sidebar">
-        <div class="sidebar-header">📋 对话日志</div>
+        <div class="sidebar-header">对话日志</div>
         <div class="connection-bar">
-            <span id="wsBadge">🔗 WebSocket: 未连接</span>
+            <span id="wsBadge">WebSocket: 未连接</span>
             <span id="statusText" class="status-disconnected">未连接</span>
         </div>
         <div class="log-container" id="logContainer"></div>
@@ -109,20 +114,27 @@
     let micStream = null;
     let micActive = false;
 
-    // ===== 会话管理 =====
     async function connect() {
         try {
-            const response = await fetch('/api/session/create', { method: 'POST' });
-            const data = await response.json();
-            sessionId = data.sessionId;
-            addLog('system', `创建会话: ${sessionId}`);
+            const response = await fetch('/api/chat/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: 'anonymous' })
+            });
+            const result = await response.json();
+            if (result.code !== '0000') {
+                addLog('error', '创建会话失败: ' + result.info);
+                return;
+            }
+            sessionId = result.data.sessionId;
+            addLog('system', '创建会话: ' + sessionId);
 
-            ws = new WebSocket(`ws://${location.host}/ws?sessionId=${sessionId}`);
+            ws = new WebSocket('ws://' + location.host + '/ws?sessionId=' + sessionId);
 
             ws.onopen = () => {
                 updateStatus('connected', '已连接');
-                wsBadge.textContent = '🔗 WebSocket: 已连接';
-                btnConnect.disabled = false;
+                wsBadge.textContent = 'WebSocket: 已连接';
+                btnConnect.disabled = true;
                 btnDisconnect.disabled = false;
                 btnCamera.disabled = false;
                 btnMic.disabled = false;
@@ -144,23 +156,23 @@
 
             ws.onclose = () => {
                 updateStatus('disconnected', '未连接');
-                wsBadge.textContent = '🔗 WebSocket: 未连接';
+                wsBadge.textContent = 'WebSocket: 未连接';
                 btnConnect.disabled = false;
                 btnConnect.textContent = '连接 WebSocket';
                 btnDisconnect.disabled = true;
                 btnCamera.disabled = true;
                 btnMic.disabled = true;
-                if (sessionId) addLog('system', `连接已关闭 (Session: ${sessionId})`);
+                if (sessionId) addLog('system', '连接已关闭 (Session: ' + sessionId + ')');
                 ws = null;
             };
 
-            ws.onerror = (err) => {
+            ws.onerror = () => {
                 addLog('error', 'WebSocket 连接错误');
                 updateStatus('error', '连接错误');
             };
 
         } catch (err) {
-            addLog('error', `创建会话失败: ${err.message}`);
+            addLog('error', '创建会话失败: ' + err.message);
             btnConnect.disabled = false;
         }
     }
@@ -175,12 +187,11 @@
         switch (msg.type) {
             case 'connected':
                 addLog('system', 'WebSocket 连接确认');
-                setTimeout(() => { toggleCamera(); }, 500);
-                setTimeout(() => { toggleMic(); }, 1000);
+                setTimeout(function() { toggleCamera(); }, 500);
+                setTimeout(function() { toggleMic(); }, 1000);
                 break;
             case 'asr_result':
                 addLog('user', msg.text);
-                addLog('system', `🎤 语音识别 (置信度: ${(msg.confidence * 100).toFixed(1)}%)`);
                 break;
             case 'tts_done':
                 addLog('ai', msg.text);
@@ -192,42 +203,39 @@
                 captureAndSendFrame();
                 break;
             case 'error':
-                addLog('error', `服务端错误: ${msg.message}`);
+                addLog('error', '服务端错误: ' + msg.message);
                 break;
             default:
                 console.log('未知消息:', msg);
         }
     }
 
-    // ===== 音频播放 (raw PCM → AudioContext) =====
     function handleAudioData(blob) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
+        var reader = new FileReader();
+        reader.onload = async function(e) {
             try {
-                const arrayBuffer = e.target.result;
-                const pcmInt16 = new Int16Array(arrayBuffer);
-                const float32Data = new Float32Array(pcmInt16.length);
-                for (let i = 0; i < pcmInt16.length; i++) {
+                var arrayBuffer = e.target.result;
+                var pcmInt16 = new Int16Array(arrayBuffer);
+                var float32Data = new Float32Array(pcmInt16.length);
+                for (var i = 0; i < pcmInt16.length; i++) {
                     float32Data[i] = pcmInt16[i] / 32768;
                 }
-                const audioCtx = new AudioContext({ sampleRate: 24000 });
-                const audioBuffer = audioCtx.createBuffer(1, float32Data.length, 24000);
+                var audioCtx = new AudioContext({ sampleRate: 24000 });
+                var audioBuffer = audioCtx.createBuffer(1, float32Data.length, 24000);
                 audioBuffer.getChannelData(0).set(float32Data);
-                const source = audioCtx.createBufferSource();
+                var source = audioCtx.createBufferSource();
                 source.buffer = audioBuffer;
                 source.connect(audioCtx.destination);
-                source.onended = () => audioCtx.close();
+                source.onended = function() { audioCtx.close(); };
                 source.start();
             } catch (err) {
                 console.warn('播放音频失败:', err);
             }
         };
-        reader.onerror = () => console.warn('读取音频数据失败');
+        reader.onerror = function() { console.warn('读取音频数据失败'); };
         reader.readAsArrayBuffer(blob);
-        addLog('system', '🔊 收到 AI 语音回复');
     }
 
-    // ===== 摄像头 =====
     async function toggleCamera() {
         if (cameraActive) { stopCamera(); return; }
         try {
@@ -236,36 +244,36 @@
             });
             document.getElementById('localVideo').srcObject = localStream;
             cameraActive = true;
-            document.querySelector('#statusBadge').textContent = '📷 摄像头: 已开启';
-            document.querySelector('#statusBadge').className = 'badge active';
-            addLog('system', '📷 摄像头已开启');
+            statusBadge.textContent = '摄像头: 已开启';
+            statusBadge.className = 'badge active';
+            addLog('system', '摄像头已开启');
             startFrameCapture();
         } catch (err) {
-            addLog('error', `摄像头访问失败: ${err.message}`);
+            addLog('error', '摄像头访问失败: ' + err.message);
         }
     }
 
     function stopCamera() {
         if (frameInterval) { clearInterval(frameInterval); frameInterval = null; }
         if (localStream) {
-            localStream.getTracks().forEach(t => t.stop());
+            localStream.getTracks().forEach(function(t) { t.stop(); });
             localStream = null;
         }
         cameraActive = false;
-        document.querySelector('#statusBadge').textContent = '📷 摄像头: 未开启';
-        document.querySelector('#statusBadge').className = 'badge';
-        addLog('system', '📷 摄像头已关闭');
+        statusBadge.textContent = '摄像头: 未开启';
+        statusBadge.className = 'badge';
+        addLog('system', '摄像头已关闭');
     }
 
     function startFrameCapture() {
         if (frameInterval) clearInterval(frameInterval);
         lastFpsTime = Date.now();
         frameCount = 0;
-        frameInterval = setInterval(() => {
+        frameInterval = setInterval(function() {
             captureAndSendFrame();
-            const now = Date.now();
+            var now = Date.now();
             if (now - lastFpsTime >= 1000) {
-                fpsBadge.textContent = `📸 帧率: ${frameCount} fps`;
+                fpsBadge.textContent = '帧率: ' + frameCount + ' fps';
                 frameCount = 0;
                 lastFpsTime = now;
             }
@@ -273,13 +281,13 @@
     }
 
     function captureAndSendFrame() {
-        const video = document.getElementById('localVideo');
+        var video = document.getElementById('localVideo');
         if (!video || !video.videoWidth) return;
-        const canvas = document.createElement('canvas');
+        var canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0);
-        const base64 = canvas.toDataURL('image/jpeg', 0.5);
+        var base64 = canvas.toDataURL('image/jpeg', 0.5);
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
                 type: 'camera_frame',
@@ -292,7 +300,6 @@
         }
     }
 
-    // ===== 麦克风 + ASR (raw PCM) =====
     async function toggleMic() {
         if (micActive) { stopMic(); return; }
         try {
@@ -303,13 +310,13 @@
                 ws.send(JSON.stringify({ type: 'start_asr' }));
             }
             audioContext = new AudioContext({ sampleRate: 16000 });
-            const source = audioContext.createMediaStreamSource(micStream);
-            const processor = audioContext.createScriptProcessor(4096, 1, 1);
-            processor.onaudioprocess = (e) => {
-                const input = e.inputBuffer.getChannelData(0);
-                const pcmData = new Int16Array(input.length);
-                for (let i = 0; i < input.length; i++) {
-                    const s = Math.max(-1, Math.min(1, input[i]));
+            var source = audioContext.createMediaStreamSource(micStream);
+            var processor = audioContext.createScriptProcessor(4096, 1, 1);
+            processor.onaudioprocess = function(e) {
+                var input = e.inputBuffer.getChannelData(0);
+                var pcmData = new Int16Array(input.length);
+                for (var i = 0; i < input.length; i++) {
+                    var s = Math.max(-1, Math.min(1, input[i]));
                     pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
                 }
                 if (ws && ws.readyState === WebSocket.OPEN) {
@@ -320,41 +327,40 @@
             processor.connect(audioContext.destination);
             scriptProcessor = processor;
             micActive = true;
-            micBadge.textContent = '🎤 麦克风: 已开启 (raw PCM)';
+            micBadge.textContent = '麦克风: 已开启';
             micBadge.className = 'badge active';
             btnMic.textContent = '关闭麦克风';
             btnMic.className = 'btn-danger';
-            addLog('system', '🎤 麦克风已开启，语音识别已启动 (raw PCM)');
+            addLog('system', '麦克风已开启，语音识别已启动');
         } catch (err) {
-            addLog('error', `麦克风访问失败: ${err.message}`);
+            addLog('error', '麦克风访问失败: ' + err.message);
         }
     }
 
     function stopMic() {
         if (scriptProcessor) { scriptProcessor.disconnect(); scriptProcessor = null; }
-        if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
-        if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+        if (audioContext) { audioContext.close().catch(function() {}); audioContext = null; }
+        if (micStream) { micStream.getTracks().forEach(function(t) { t.stop(); }); micStream = null; }
         micActive = false;
-        micBadge.textContent = '🎤 麦克风: 未开启';
+        micBadge.textContent = '麦克风: 未开启';
         micBadge.className = 'badge';
-        btnMic.textContent = '打开麦克风';
+        btnMic.textContent = '麦克风';
         btnMic.className = 'btn-secondary';
-        addLog('system', '🎤 麦克风已关闭');
+        addLog('system', '麦克风已关闭');
     }
 
-    // ===== UI 工具 =====
     function updateStatus(state, text) {
-        const el = document.getElementById('statusText');
+        var el = document.getElementById('statusText');
         el.textContent = text;
-        el.className = `status-${state}`;
+        el.className = 'status-' + state;
     }
 
     function addLog(type, text) {
-        const container = document.getElementById('logContainer');
-        const entry = document.createElement('div');
-        entry.className = `log-entry ${type}`;
-        const time = new Date().toLocaleTimeString();
-        entry.innerHTML = `<span class="log-time">${time}</span>${text}`;
+        var container = document.getElementById('logContainer');
+        var entry = document.createElement('div');
+        entry.className = 'log-entry ' + type;
+        var time = new Date().toLocaleTimeString();
+        entry.innerHTML = '<span class="log-time">' + time + '</span>' + text;
         container.appendChild(entry);
         container.scrollTop = container.scrollHeight;
     }

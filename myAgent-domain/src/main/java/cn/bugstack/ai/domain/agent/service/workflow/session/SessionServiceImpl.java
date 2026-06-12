@@ -1,7 +1,8 @@
 package cn.bugstack.ai.domain.agent.service.workflow.session;
 
+import cn.bugstack.ai.domain.agent.adapter.repository.SessionRepository;
 import cn.bugstack.ai.domain.agent.model.entity.SessionEntity;
-import cn.bugstack.ai.domain.agent.repository.SessionRepository;
+import cn.bugstack.ai.domain.agent.service.ISessionService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

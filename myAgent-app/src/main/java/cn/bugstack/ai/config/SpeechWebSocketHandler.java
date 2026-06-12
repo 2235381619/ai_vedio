@@ -9,7 +9,7 @@ import cn.bugstack.ai.domain.agent.service.IAgentFlowService;
 import cn.bugstack.ai.domain.agent.service.IAsrService;
 import cn.bugstack.ai.domain.agent.service.ICameraFrameService;
 import cn.bugstack.ai.domain.agent.service.ITtsService;
-import cn.bugstack.ai.domain.agent.service.workflow.session.ISessionService;
+import cn.bugstack.ai.domain.agent.service.ISessionService;
 import cn.bugstack.ai.domain.agent.service.workflow.vision.FrameRequestService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
