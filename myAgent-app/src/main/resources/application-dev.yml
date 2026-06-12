@@ -1,5 +1,9 @@
 server:
   port: 8091
+  tomcat:
+    websocket:
+      max-binary-message-size: 1048576
+      max-text-message-size: 1048576
 
 # 线程池配置
 thread:
@@ -42,10 +46,10 @@ spring:
         dimensions: 1024
         initialize-schema: true
 
-# MyBatis 配置【如需使用记得打开】
-#mybatis:
-#  mapper-locations: classpath:/mybatis/mapper/*.xml
-#  config-location:  classpath:/mybatis/config/mybatis-config.xml
+# MyBatis 配置
+mybatis:
+  mapper-locations: classpath:/mybatis/mapper/*.xml
+  config-location:  classpath:/mybatis/config/mybatis-config.xml
 
 # 日志
 logging:

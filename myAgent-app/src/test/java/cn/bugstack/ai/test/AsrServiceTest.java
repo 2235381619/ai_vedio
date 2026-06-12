@@ -32,10 +32,6 @@ public class AsrServiceTest {
         AsrRequestEntity request = AsrRequestEntity.builder()
                 .sessionId(sessionId)
                 .audioData(audioData)
-                .format("pcm")
-                .sampleRate(16000)
-                .channels(1)
-                .language("zh")
                 .build();
 
         AsrResponseEntity response = asrService.recognize(request);
