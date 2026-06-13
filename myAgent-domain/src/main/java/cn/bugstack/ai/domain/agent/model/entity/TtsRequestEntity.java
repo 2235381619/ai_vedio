@@ -18,4 +18,5 @@ public class TtsRequestEntity {
     private Float speechRate;
     private Integer volume;
     private Float pitchRate;
+    private String instruction;
 }

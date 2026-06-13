@@ -1,5 +1,6 @@
 package cn.bugstack.ai.domain.agent.service.workflow.agent;
 
+import cn.bugstack.ai.domain.agent.model.entity.AgentOutput;
 import cn.bugstack.ai.domain.agent.model.entity.AgentRequestEntity;
 import cn.bugstack.ai.domain.agent.model.entity.AgentResponseEntity;
 import cn.bugstack.ai.domain.agent.model.valobj.AgentType;
@@ -8,6 +9,7 @@ import cn.bugstack.ai.domain.agent.service.IAgentFlowService;
 import com.alibaba.cloud.ai.graph.CompiledGraph;
 import com.alibaba.cloud.ai.graph.NodeOutput;
 import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -54,19 +56,31 @@ public class AgentFlowServiceImpl implements IAgentFlowService {
 
             var visionOutput = state.value("vision_output");
             if (visionOutput.isPresent()) {
-                String response = visionOutput.get().toString();
-                if (!response.isBlank()) {
-                    log.info("视觉处理完成: sessionId={}, response={}", sessionId, truncate(response, 100));
-                    return buildResponse(sessionId, response, AgentType.VISION);
+                AgentOutput visionAgentOutput = extractAgentOutput(visionOutput.get());
+                if (visionAgentOutput != null && visionAgentOutput.getResponse() != null && !visionAgentOutput.getResponse().isBlank()) {
+                    log.info("视觉处理完成: sessionId={}, instruction={}", sessionId, visionAgentOutput.getInstruction());
+                    return AgentResponseEntity.builder()
+                            .sessionId(sessionId)
+                            .response(visionAgentOutput.getResponse())
+                            .instruction(visionAgentOutput.getInstruction())
+                            .agentType(AgentType.VISION)
+                            .build();
                 }
             }
 
+            // 从 text_output 读取结构化输出
             var textOutput = state.value("text_output");
             if (textOutput.isPresent()) {
-                String response = extractText(textOutput.get());
-                if (response != null && !response.isBlank()) {
-                    log.info("文本处理完成: sessionId={}, response={}", sessionId, truncate(response, 100));
-                    return buildResponse(sessionId, response, AgentType.TEXT);
+                AgentOutput agentOutput = extractAgentOutput(textOutput.get());
+                if (agentOutput != null && agentOutput.getResponse() != null && !agentOutput.getResponse().isBlank()) {
+                    log.info("文本输出: sessionId={}, response={}, instruction={}",
+                            sessionId, truncate(agentOutput.getResponse(), 100), agentOutput.getInstruction());
+                    return AgentResponseEntity.builder()
+                            .sessionId(sessionId)
+                            .response(agentOutput.getResponse())
+                            .instruction(agentOutput.getInstruction())
+                            .agentType(AgentType.TEXT)
+                            .build();
                 }
             }
 
@@ -81,13 +95,35 @@ public class AgentFlowServiceImpl implements IAgentFlowService {
         }
     }
 
-    private String extractText(Object value) {
+    private AgentOutput extractAgentOutput(Object value) {
         if (value == null) return null;
-        String text = value.toString();
-        if (text.startsWith("AssistantMessage") || text.contains("messageType=")) {
-            return null;
+        if (value instanceof AgentOutput) {
+            return (AgentOutput) value;
         }
-        return text.isBlank() ? null : text;
+        String json = value.toString().trim();
+        // 去掉 AssistantMessage 包装，提取 textContent
+        if (json.contains("textContent=")) {
+            int start = json.indexOf("textContent=") + "textContent=".length();
+            // 跳过可能的引号
+            if (start < json.length() && json.charAt(start) == '{') {
+                int end = json.indexOf('}', start);
+                if (end > start) {
+                    json = json.substring(start, end + 1);
+                }
+            }
+        }
+        // 去掉可能的 markdown 代码块标记
+        if (json.startsWith("```")) {
+            json = json.replaceAll("```[a-zA-Z]*", "").trim();
+        }
+        try {
+            return JSON.parseObject(json, AgentOutput.class);
+        } catch (Exception e) {
+            log.warn("解析 AgentOutput 失败，尝试作为纯文本处理: {}", e.getMessage());
+            AgentOutput output = new AgentOutput();
+            output.setResponse(json);
+            return output;
+        }
     }
 
     private AgentResponseEntity buildResponse(String sessionId, String text, AgentType agentType) {

@@ -37,6 +37,10 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
     private final ISessionService sessionService;
     private final WebSocketSessionManager sessionManager;
 
+    private static final long DEBOUNCE_MS = 3000;
+    private String lastInputText = "";
+    private long lastInputTime = 0;
+
     public SpeechWebSocketHandler(IAsrService asrService, ITtsService ttsService,
                                   ICameraFrameService cameraFrameService,
                                   FrameRequestService frameRequestService,
@@ -151,6 +155,16 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
             log.warn("文本为空，跳过处理: sessionId={}", sessionId);
             return;
         }
+
+        // 防抖：3 秒内相同文本不重复处理
+        long now = System.currentTimeMillis();
+        if (text.equals(lastInputText) && (now - lastInputTime) < DEBOUNCE_MS) {
+            log.debug("防抖跳过重复文本: sessionId={}, text={}", sessionId, text);
+            return;
+        }
+        lastInputText = text;
+        lastInputTime = now;
+
         log.info("ASR 识别文本: sessionId={}, text={}", sessionId, text);
 
         AgentRequestEntity agentRequest = AgentRequestEntity.builder()
@@ -164,13 +178,15 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
             return;
         }
 
-        log.info("Agent 响应: sessionId={}, agentType={}, response={}",
-                sessionId, agentResponse.getAgentType(), truncate(agentText, 100));
+        log.info("Agent 响应: sessionId={}, agentType={}, instruction={}, response={}",
+                sessionId, agentResponse.getAgentType(), agentResponse.getInstruction(), truncate(agentText, 100));
 
         TtsRequestEntity ttsRequest = TtsRequestEntity.builder()
                 .sessionId(sessionId).text(agentText)
                 .voice("Cherry").languageType("Chinese").mode("server_commit")
-                .speechRate(1.0f).volume(50).pitchRate(1.0f).build();
+                .speechRate(1.0f).volume(50).pitchRate(1.0f)
+                .instruction(agentResponse.getInstruction())
+                .build();
 
         try {
             TtsResponseEntity ttsResponse = ttsService.synthesize(ttsRequest);

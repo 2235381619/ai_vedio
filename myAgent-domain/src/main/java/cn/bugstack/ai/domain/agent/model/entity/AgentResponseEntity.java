@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 public class AgentResponseEntity {
     private String sessionId;
     private String response;
+    private String instruction;
     private AgentType agentType;
 }
