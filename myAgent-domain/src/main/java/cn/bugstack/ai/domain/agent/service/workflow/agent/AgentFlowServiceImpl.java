@@ -1,8 +1,11 @@
 package cn.bugstack.ai.domain.agent.service.workflow.agent;
 
+import cn.bugstack.ai.domain.agent.adapter.repository.IChatRepository;
 import cn.bugstack.ai.domain.agent.model.entity.AgentOutput;
 import cn.bugstack.ai.domain.agent.model.entity.AgentRequestEntity;
 import cn.bugstack.ai.domain.agent.model.entity.AgentResponseEntity;
+import cn.bugstack.ai.domain.agent.model.entity.ChatConversationEntity;
+import cn.bugstack.ai.domain.agent.model.entity.ChatMessageEntity;
 import cn.bugstack.ai.domain.agent.model.valobj.AgentType;
 import cn.bugstack.ai.domain.agent.model.valobj.SessionContextHolder;
 import cn.bugstack.ai.domain.agent.service.IAgentFlowService;
@@ -11,18 +14,29 @@ import com.alibaba.cloud.ai.graph.NodeOutput;
 import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 public class AgentFlowServiceImpl implements IAgentFlowService {
 
     private final CompiledGraph conversationWorkflow;
+    private final IChatRepository chatRepository;
+    private final Map<String, Long> sessionConversationMap = new ConcurrentHashMap<>();
 
-    public AgentFlowServiceImpl(CompiledGraph conversationWorkflow) {
+    public AgentFlowServiceImpl(CompiledGraph conversationWorkflow,
+                                IChatRepository chatRepository) {
         this.conversationWorkflow = conversationWorkflow;
+        this.chatRepository = chatRepository;
     }
 
     @Override
@@ -33,11 +47,31 @@ public class AgentFlowServiceImpl implements IAgentFlowService {
 
         SessionContextHolder.setSessionId(sessionId);
         try {
-            Map<String, Object> input = Map.of(
-                    "input", text,
-                    "sessionId", sessionId,
-                    "vision_output", ""
-            );
+            // 获取或创建会话记录
+            Long conversationId = request.getConversationId();
+            if (conversationId == null) {
+                conversationId = sessionConversationMap.computeIfAbsent(sessionId,
+                        sid -> chatRepository.createConversation(sid, "语音会话 " + sid));
+            }
+
+            // 从 DB 加载历史消息，转换为 Spring AI Message 对象
+            List<ChatMessageEntity> history = chatRepository.getConversationMessages(conversationId);
+            List<Message> messages = new ArrayList<>();
+            for (ChatMessageEntity msg : history) {
+                if ("user".equals(msg.getRole())) {
+                    messages.add(new UserMessage(msg.getContent()));
+                } else {
+                    messages.add(new AssistantMessage(msg.getContent()));
+                }
+            }
+            // 追加当前用户输入
+            messages.add(new UserMessage(text));
+
+            Map<String, Object> input = new HashMap<>();
+            input.put("input", text);
+            input.put("sessionId", sessionId);
+            input.put("vision_output", "");
+            input.put("messages", messages);
 
             NodeOutput lastOutput = conversationWorkflow.stream(input)
                     .doOnNext(output -> {
@@ -54,38 +88,58 @@ public class AgentFlowServiceImpl implements IAgentFlowService {
 
             var state = lastOutput.state();
 
+            // 提取响应内容
+            String responseText = null;
+            AgentType agentType = AgentType.TEXT;
+            String instruction = null;
+
             var visionOutput = state.value("vision_output");
             if (visionOutput.isPresent()) {
                 AgentOutput visionAgentOutput = extractAgentOutput(visionOutput.get());
                 if (visionAgentOutput != null && visionAgentOutput.getResponse() != null && !visionAgentOutput.getResponse().isBlank()) {
-                    log.info("视觉处理完成: sessionId={}, instruction={}", sessionId, visionAgentOutput.getInstruction());
-                    return AgentResponseEntity.builder()
-                            .sessionId(sessionId)
-                            .response(visionAgentOutput.getResponse())
-                            .instruction(visionAgentOutput.getInstruction())
-                            .agentType(AgentType.VISION)
-                            .build();
+                    responseText = visionAgentOutput.getResponse();
+                    instruction = visionAgentOutput.getInstruction();
+                    agentType = AgentType.VISION;
                 }
             }
 
-            // 从 text_output 读取结构化输出
-            var textOutput = state.value("text_output");
-            if (textOutput.isPresent()) {
-                AgentOutput agentOutput = extractAgentOutput(textOutput.get());
-                if (agentOutput != null && agentOutput.getResponse() != null && !agentOutput.getResponse().isBlank()) {
-                    log.info("文本输出: sessionId={}, response={}, instruction={}",
-                            sessionId, truncate(agentOutput.getResponse(), 100), agentOutput.getInstruction());
-                    return AgentResponseEntity.builder()
-                            .sessionId(sessionId)
-                            .response(agentOutput.getResponse())
-                            .instruction(agentOutput.getInstruction())
-                            .agentType(AgentType.TEXT)
-                            .build();
+            if (responseText == null) {
+                var textOutput = state.value("text_output");
+                if (textOutput.isPresent()) {
+                    AgentOutput agentOutput = extractAgentOutput(textOutput.get());
+                    if (agentOutput != null && agentOutput.getResponse() != null && !agentOutput.getResponse().isBlank()) {
+                        responseText = agentOutput.getResponse();
+                        instruction = agentOutput.getInstruction();
+                    }
                 }
             }
 
-            log.warn("工作流无法提取有效响应: sessionId={}", sessionId);
-            return buildResponse(sessionId, "抱歉，我暂时无法回答这个问题。", AgentType.TEXT);
+            if (responseText == null) {
+                log.warn("工作流无法提取有效响应: sessionId={}", sessionId);
+                return buildResponse(sessionId, "抱歉，我暂时无法回答这个问题。", AgentType.TEXT);
+            }
+
+            // 持久化对话到数据库
+            chatRepository.saveMessage(conversationId, "user", text, null);
+            chatRepository.saveMessage(conversationId, "assistant", responseText,
+                    instruction != null ? "{\"instruction\":\"" + instruction + "\"}" : null);
+
+            // 用首条用户消息更新对话标题
+            ChatConversationEntity conv = chatRepository.getConversation(conversationId);
+            if (conv != null && "新对话".equals(conv.getTitle())) {
+                chatRepository.updateConversationTitle(conversationId, truncate(text, 20));
+            }
+
+            log.info("{}: sessionId={}, response={}, instruction={}",
+                    agentType == AgentType.VISION ? "视觉处理完成" : "文本输出",
+                    sessionId, truncate(responseText, 100), instruction);
+
+            return AgentResponseEntity.builder()
+                    .sessionId(sessionId)
+                    .response(responseText)
+                    .instruction(instruction)
+                    .agentType(agentType)
+                    .build();
 
         } catch (Exception e) {
             log.error("AgentFlow 处理异常: sessionId={}", sessionId, e);

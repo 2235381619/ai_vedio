@@ -87,7 +87,8 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
                 case "start_asr": handleStartAsr(sessionId); break;
                 case "end_asr": handleEndAsr(sessionId); break;
                 case "cancel": handleCancel(sessionId); break;
-                case "text": handleTextMessage(sessionId, json.getString("message")); break;
+                case "text": handleTextMessage(sessionId, json.getString("message"),
+                        (Long) session.getAttributes().get("conversationId")); break;
                 case "camera_frame": handleCameraFrame(sessionId, json); break;
                 default: log.warn("未知消息类型: {}", type);
             }
@@ -115,6 +116,8 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
         log.info("开始流式语音识别: sessionId={}", sessionId);
         WebSocketSession wsSession = sessionManager.getSession(sessionId);
         if (wsSession != null) wsSession.getAttributes().put("asrStarted", true);
+        Long conversationId = wsSession != null ? (Long) wsSession.getAttributes().get("conversationId") : null;
+        final Long asrConvId = conversationId;
         asrService.startStreaming(sessionId, response -> {
             try {
                 String text = response.getText();
@@ -130,7 +133,7 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
                 sessionManager.sendMessage(sessionId, msg -> msg.putAll(result));
 
                 if (text != null && !text.isBlank()) {
-                    handleTextMessage(sessionId, text);
+                    handleTextMessage(sessionId, text, asrConvId);
                 }
             } catch (Exception e) {
                 log.error("处理 ASR 结果失败: sessionId={}", sessionId, e);
@@ -150,7 +153,7 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
         cameraFrameService.clearFrame(sessionId);
     }
 
-    private void handleTextMessage(String sessionId, String text) throws IOException {
+    private void handleTextMessage(String sessionId, String text, Long conversationId) throws IOException {
         if (text == null || text.isBlank()) {
             log.warn("文本为空，跳过处理: sessionId={}", sessionId);
             return;
@@ -168,7 +171,9 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
         log.info("ASR 识别文本: sessionId={}, text={}", sessionId, text);
 
         AgentRequestEntity agentRequest = AgentRequestEntity.builder()
-                .sessionId(sessionId).text(text).build();
+                .sessionId(sessionId).text(text)
+                .conversationId(conversationId)
+                .build();
         AgentResponseEntity agentResponse = agentFlowService.process(agentRequest);
         String agentText = agentResponse.getResponse();
 

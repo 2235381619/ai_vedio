@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class AgentRequestEntity {
     private String sessionId;
     private String text;
+    private Long conversationId;
 }

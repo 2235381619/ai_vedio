@@ -65,7 +65,7 @@ public class ChatController {
 
     @GetMapping("/conversations")
     public Response<List<ChatConversationEntity>> getConversations(
-            @RequestParam(defaultValue = "default") String userId) {
+            @RequestParam(name = "userId", defaultValue = "default") String userId) {
         try {
             List<ChatConversationEntity> list = chatRepository.getUserConversations(userId);
             return Response.<List<ChatConversationEntity>>builder()
@@ -79,7 +79,7 @@ public class ChatController {
 
     @PostMapping("/conversations")
     public Response<Map<String, Object>> createConversation(
-            @RequestParam(defaultValue = "default") String userId) {
+            @RequestParam(name = "userId", defaultValue = "default") String userId) {
         try {
             Long id = chatRepository.createConversation(userId, "新对话");
             Map<String, Object> data = new HashMap<>();
@@ -94,7 +94,7 @@ public class ChatController {
     }
 
     @DeleteMapping("/conversations/{id}")
-    public Response<Void> deleteConversation(@PathVariable Long id) {
+    public Response<Void> deleteConversation(@PathVariable(name = "id") Long id) {
         try {
             chatRepository.deleteConversation(id);
             return Response.<Void>builder()
@@ -107,7 +107,7 @@ public class ChatController {
     }
 
     @GetMapping("/conversations/{id}/messages")
-    public Response<List<ChatMessageEntity>> getMessages(@PathVariable Long id) {
+    public Response<List<ChatMessageEntity>> getMessages(@PathVariable(name = "id") Long id) {
         try {
             List<ChatMessageEntity> messages = chatRepository.getConversationMessages(id);
             return Response.<List<ChatMessageEntity>>builder()
