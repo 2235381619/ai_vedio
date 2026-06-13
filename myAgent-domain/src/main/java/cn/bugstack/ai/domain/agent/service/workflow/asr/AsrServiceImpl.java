@@ -143,6 +143,7 @@ public class AsrServiceImpl implements IAsrService {
     public void startStreaming(String sessionId, Consumer<AsrResponseEntity> callback) {
         log.info("启动流式 ASR: sessionId={}", sessionId);
         streamingCallbacks.put(sessionId, callback);
+        Constants.baseWebsocketApiUrl = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
 
         Recognition recognition = connectionMap.computeIfAbsent(sessionId, k -> new Recognition());
         try {

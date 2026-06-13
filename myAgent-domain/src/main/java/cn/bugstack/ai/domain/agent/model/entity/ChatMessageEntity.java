@@ -5,12 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class AgentRequestEntity {
-    private String sessionId;
-    private String text;
+@NoArgsConstructor
+@Builder
+public class ChatMessageEntity {
+    private Long id;
     private Long conversationId;
+    private String role;
+    private String content;
+    private String metadata;
+    private Date createdAt;
 }

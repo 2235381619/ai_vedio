@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Slf4j
 public class AsrServiceTest {
 
@@ -32,10 +32,6 @@ public class AsrServiceTest {
         AsrRequestEntity request = AsrRequestEntity.builder()
                 .sessionId(sessionId)
                 .audioData(audioData)
-                .format("pcm")
-                .sampleRate(16000)
-                .channels(1)
-                .language("zh")
                 .build();
 
         AsrResponseEntity response = asrService.recognize(request);

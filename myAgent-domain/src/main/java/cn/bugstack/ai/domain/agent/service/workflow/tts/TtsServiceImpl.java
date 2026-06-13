@@ -19,6 +19,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -42,7 +43,7 @@ public class TtsServiceImpl implements ITtsService {
     @PostConstruct
     public void init() {
         param = QwenTtsRealtimeParam.builder()
-                .model("qwen3-tts-flash-realtime")
+                .model("qwen3-tts-instruct-flash-realtime")
                 .url("wss://dashscope.aliyuncs.com/api-ws/v1/realtime")
                 .apikey(apiKey)
                 .build();
@@ -61,21 +62,13 @@ public class TtsServiceImpl implements ITtsService {
 
         sessionService.touchSession(sessionId);
 
-        QwenTtsRealtime qwenTtsRealtime = connectionMap.get(sessionId);
-        boolean isReused = qwenTtsRealtime != null;
-
-        if (!isReused) {
-            qwenTtsRealtime = createTtsClient(latch, audioBuilder, firstAudioDelay, startTime);
-        }
+        // 每次合成都新建连接（finish 后连接不可复用）
+        QwenTtsRealtime qwenTtsRealtime = createTtsClient(latch, audioBuilder, firstAudioDelay, startTime);
 
         try {
-            if (!isReused) {
-                qwenTtsRealtime.connect();
-                connectionMap.put(sessionId, qwenTtsRealtime);
-                log.debug("新建 TTS 连接并保存: sessionId={}", sessionId);
-            } else {
-                log.debug("复用已有 TTS 连接: sessionId={}", sessionId);
-            }
+            qwenTtsRealtime.connect();
+            connectionMap.put(sessionId, qwenTtsRealtime);
+            log.debug("新建 TTS 连接: sessionId={}", sessionId);
 
             QwenTtsRealtimeConfig config = QwenTtsRealtimeConfig.builder()
                     .voice(request.getVoice() != null ? request.getVoice() : "Cherry")
@@ -84,15 +77,19 @@ public class TtsServiceImpl implements ITtsService {
                     .speechRate(request.getSpeechRate() != null ? request.getSpeechRate() : 1.0f)
                     .volume(request.getVolume() != null ? request.getVolume() : 50)
                     .pitchRate(request.getPitchRate() != null ? request.getPitchRate() : 1.0f)
+                    .instructions(request.getInstruction())
                     .build();
 
             qwenTtsRealtime.updateSession(config);
             qwenTtsRealtime.appendText(request.getText());
             qwenTtsRealtime.finish();
 
-            latch.await();
+            if (!latch.await(30, TimeUnit.SECONDS)) {
+                log.warn("TTS 合成超时: sessionId={}", sessionId);
+            }
 
-            byte[] audioData = Base64.getDecoder().decode(audioBuilder.toString());
+            byte[] audioData = Base64.getMimeDecoder().decode(audioBuilder.toString().trim()
+                    .replaceAll("[^A-Za-z0-9+/=]", ""));
 
             return TtsResponseEntity.builder()
                     .sessionId(sessionId)
@@ -267,6 +264,7 @@ public class TtsServiceImpl implements ITtsService {
                     .speechRate(request.getSpeechRate() != null ? request.getSpeechRate() : 1.0f)
                     .volume(request.getVolume() != null ? request.getVolume() : 50)
                     .pitchRate(request.getPitchRate() != null ? request.getPitchRate() : 1.0f)
+                    .instructions(request.getInstruction())
                     .build();
 
             qwenTtsRealtime.updateSession(config);

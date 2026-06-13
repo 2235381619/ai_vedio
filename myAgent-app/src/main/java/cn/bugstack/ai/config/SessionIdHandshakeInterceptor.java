@@ -25,7 +25,16 @@ public class SessionIdHandshakeInterceptor implements HandshakeInterceptor {
                 sessionId = sessionId.substring(0, sessionId.indexOf("&"));
             }
             attributes.put("sessionId", sessionId);
-            log.debug("WebSocket 握手提取 sessionId: {}", sessionId);
+
+            if (query.contains("conversationId=")) {
+                String convId = query.substring(query.indexOf("conversationId=") + "conversationId=".length());
+                if (convId.contains("&")) {
+                    convId = convId.substring(0, convId.indexOf("&"));
+                }
+                attributes.put("conversationId", Long.parseLong(convId));
+            }
+
+            log.debug("WebSocket 握手提取 sessionId: {}, conversationId: {}", sessionId, attributes.get("conversationId"));
             return true;
         }
         log.warn("WebSocket 握手缺少 sessionId 参数");
