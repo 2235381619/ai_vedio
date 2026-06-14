@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 视频通话</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f; color: #e0e0e0; height: 100vh; overflow: hidden;
+        }
+        .container { display: flex; height: 100vh; }
+
+        /* 左侧对话列表 */
+        .conv-sidebar {
+            width: 260px; background: #171717;
+            display: flex; flex-direction: column; flex-shrink: 0;
+            border-right: 1px solid #2a2a2a;
+        }
+        .conv-header {
+            padding: 16px; font-size: 14px; font-weight: 600;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .btn-new-chat {
+            background: #1a73e8; color: white; border: none;
+            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;
+        }
+        .btn-new-chat:hover { opacity: 0.85; }
+        .conv-list {
+            flex: 1; overflow-y: auto; padding: 8px;
+        }
+        .conv-item {
+            padding: 10px 12px; border-radius: 6px; cursor: pointer;
+            font-size: 13px; margin-bottom: 4px; transition: background 0.15s;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .conv-item:hover { background: #2a2a2a; }
+        .conv-item.active { background: #1a3a5c; color: #64b5f6; }
+        .conv-item .conv-title {
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+        }
+        .conv-item .btn-del {
+            display: none; background: none; border: none; color: #e57373;
+            cursor: pointer; font-size: 14px; padding: 0 4px; line-height: 1;
+        }
+        .conv-item:hover .btn-del { display: inline-block; }
+        .conv-item .btn-del:hover { color: #f44336; }
+
+        /* 中间主区域 */
+        .main {
+            flex: 1; display: flex; flex-direction: column;
+            min-width: 0;
+        }
+        .video-container {
+            flex: 1; background: #000; position: relative;
+            overflow: hidden; min-height: 300px;
+        }
+        .video-container video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .video-overlay {
+            position: absolute; bottom: 12px; left: 12px; right: 12px;
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .video-overlay .badge {
+            background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 4px; font-size: 12px;
+        }
+        .badge.active { color: #4caf50; }
+        .divider { height: 1px; background: #2a2a2a; margin: 0; }
+        .controls {
+            padding: 12px 16px; display: flex; gap: 8px; align-items: center;
+            background: #1a1a1a; flex-shrink: 0;
+        }
+        .controls button {
+            padding: 8px 16px; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s;
+        }
+        .controls button:hover { opacity: 0.85; }
+        .controls button:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-danger { background: #d32f2f; color: white; }
+        .btn-secondary { background: #555; color: white; }
+
+        /* 右侧对话日志 */
+        .log-sidebar {
+            width: 320px; background: #1a1a1a;
+            display: flex; flex-direction: column; flex-shrink: 0;
+            border-left: 1px solid #2a2a2a;
+        }
+        .log-header {
+            padding: 12px 16px; font-size: 14px; font-weight: 600;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .connection-bar {
+            padding: 8px 16px; display: flex; gap: 12px; align-items: center;
+            border-bottom: 1px solid #2a2a2a; font-size: 12px;
+        }
+        #statusText { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .status-connected { background: #1b5e20; color: #81c784; }
+        .status-disconnected { background: #b71c1c; color: #ef9a9a; }
+        .status-error { background: #e65100; color: #ffcc80; }
+        .log-container {
+            flex: 1; overflow-y: auto; padding: 12px; background: #121212;
+        }
+        .log-entry { margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+        .log-entry.user { color: #81c784; }
+        .log-entry.ai { color: #64b5f6; }
+        .log-entry.system { color: #bdbdbd; font-style: italic; font-size: 12px; }
+        .log-entry.error { color: #e57373; }
+        .log-time { color: #616161; margin-right: 8px; font-size: 11px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 左侧对话列表 -->
+    <div class="conv-sidebar">
+        <div class="conv-header">
+            <span>对话记录</span>
+            <button class="btn-new-chat" onclick="newConversation()">+ 新对话</button>
+        </div>
+        <div class="conv-list" id="convList"></div>
+    </div>
+
+    <!-- 中间主区域 -->
+    <div class="main">
+        <div class="video-container">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <div class="video-overlay">
+                <span class="badge" id="statusBadge">摄像头: 未开启</span>
+                <span class="badge" id="micBadge">麦克风: 未开启</span>
+                <span class="badge" id="fpsBadge">帧率: 0 fps</span>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="controls">
+            <button id="btnConnect" class="btn-primary" onclick="connect()">连接</button>
+            <button id="btnDisconnect" class="btn-danger" onclick="disconnect()" disabled>断开</button>
+            <button id="btnCamera" class="btn-secondary" onclick="toggleCamera()" disabled>摄像头</button>
+            <button id="btnMic" class="btn-secondary" onclick="toggleMic()" disabled>麦克风</button>
+        </div>
+    </div>
+
+    <!-- 右侧对话日志 -->
+    <div class="log-sidebar">
+        <div class="log-header">对话日志</div>
+        <div class="connection-bar">
+            <span id="wsBadge">WebSocket: 未连接</span>
+            <span id="statusText" class="status-disconnected">未连接</span>
+        </div>
+        <div class="log-container" id="logContainer"></div>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+    let sessionId = null;
+    let localStream = null;
+    let frameInterval = null;
+    let frameCount = 0;
+    let lastFpsTime = Date.now();
+    let cameraActive = false;
+    let audioContext = null;
+    let scriptProcessor = null;
+    let micStream = null;
+    let micActive = false;
+    let currentConvId = null;
+    let conversations = [];
+
+    // ===== 对话管理 =====
+    async function loadConversations() {
+        try {
+            const res = await fetch('/api/chat/conversations?userId=default');
+            const json = await res.json();
+            if (json.code === '0000') {
+                conversations = json.data || [];
+                renderConvList();
+            }
+        } catch (e) {
+            console.warn('加载对话列表失败:', e);
+        }
+    }
+
+    function renderConvList() {
+        const list = document.getElementById('convList');
+        list.innerHTML = '';
+        conversations.forEach(function(c) {
+            const div = document.createElement('div');
+            div.className = 'conv-item' + (c.id === currentConvId ? ' active' : '');
+            div.innerHTML = '<span class="conv-title">' + (c.title || '对话') + '</span>' +
+                '<button class="btn-del" onclick="event.stopPropagation();deleteConversation(' + c.id + ')">×</button>';
+            div.onclick = function() { selectConversation(c.id); };
+            list.appendChild(div);
+        });
+    }
+
+    async function newConversation() {
+        try {
+            const res = await fetch('/api/chat/conversations?userId=default', { method: 'POST' });
+            const json = await res.json();
+            if (json.code === '0000') {
+                await loadConversations();
+                selectConversation(json.data.id);
+            }
+        } catch (e) {
+            console.warn('创建对话失败:', e);
+        }
+    }
+
+    async function selectConversation(id) {
+        currentConvId = id;
+        renderConvList();
+        // 加载历史消息到右侧日志
+        try {
+            const res = await fetch('/api/chat/conversations/' + id + '/messages');
+            const json = await res.json();
+            if (json.code === '0000') {
+                var container = document.getElementById('logContainer');
+                container.innerHTML = '';
+                (json.data || []).forEach(function(m) {
+                    addLog(m.role === 'user' ? 'user' : 'ai', m.content);
+                });
+            }
+        } catch (e) {
+            console.warn('加载消息失败:', e);
+        }
+    }
+
+    async function deleteConversation(id) {
+        if (!confirm('确定删除此对话吗？')) return;
+        try {
+            await fetch('/api/chat/conversations/' + id, { method: 'DELETE' });
+            if (currentConvId === id) {
+                currentConvId = null;
+                document.getElementById('logContainer').innerHTML = '';
+            }
+            await loadConversations();
+        } catch (e) {
+            console.warn('删除对话失败:', e);
+        }
+    }
+
+    // ===== WebSocket 会话管理 =====
+    async function connect() {
+        try {
+            if (!currentConvId) {
+                await newConversation();
+                return;
+            }
+            const response = await fetch('/api/chat/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: 'default' })
+            });
+            const result = await response.json();
+            if (result.code !== '0000') {
+                addLog('error', '创建会话失败: ' + result.info);
+                return;
+            }
+            sessionId = result.data.sessionId;
+            addLog('system', '创建会话: ' + sessionId);
+
+            ws = new WebSocket('ws://' + location.host + '/ws?sessionId=' + sessionId + '&conversationId=' + currentConvId);
+
+            ws.onopen = function() {
+                updateStatus('connected', '已连接');
+                wsBadge.textContent = 'WebSocket: 已连接';
+                btnConnect.disabled = true;
+                btnDisconnect.disabled = false;
+                btnCamera.disabled = false;
+                btnMic.disabled = false;
+                addLog('system', 'WebSocket 已连接');
+            };
+
+            ws.onmessage = function(event) {
+                if (event.data instanceof Blob) {
+                    handleAudioData(event.data);
+                    return;
+                }
+                try {
+                    var msg = JSON.parse(event.data);
+                    handleMessage(msg);
+                } catch (e) {
+                    console.warn('非JSON消息:', event.data);
+                }
+            };
+
+            ws.onclose = function() {
+                updateStatus('disconnected', '未连接');
+                wsBadge.textContent = 'WebSocket: 未连接';
+                btnConnect.disabled = false;
+                btnConnect.textContent = '连接';
+                btnDisconnect.disabled = true;
+                btnCamera.disabled = true;
+                btnMic.disabled = true;
+                if (sessionId) addLog('system', '连接已关闭');
+                ws = null;
+            };
+
+            ws.onerror = function() {
+                addLog('error', 'WebSocket 连接错误');
+                updateStatus('error', '连接错误');
+            };
+
+        } catch (err) {
+            addLog('error', '创建会话失败: ' + err.message);
+            btnConnect.disabled = false;
+        }
+    }
+
+    function disconnect() {
+        if (ws) { ws.close(); ws = null; }
+        stopCamera();
+        stopMic();
+    }
+
+    function handleMessage(msg) {
+        switch (msg.type) {
+            case 'connected':
+                addLog('system', 'WebSocket 连接确认');
+                setTimeout(function() { toggleCamera(); }, 500);
+                setTimeout(function() { toggleMic(); }, 1000);
+                break;
+            case 'asr_result':
+                addLog('user', msg.text);
+                break;
+            case 'tts_done':
+                addLog('ai', msg.text);
+                break;
+            case 'camera_frame_ack':
+                frameCount++;
+                break;
+            case 'request_frame':
+                captureAndSendFrame();
+                break;
+            case 'error':
+                addLog('error', '服务端错误: ' + msg.message);
+                break;
+            default:
+                console.log('未知消息:', msg);
+        }
+    }
+
+    function handleAudioData(blob) {
+        var reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                var arrayBuffer = e.target.result;
+                var pcmInt16 = new Int16Array(arrayBuffer);
+                var float32Data = new Float32Array(pcmInt16.length);
+                for (var i = 0; i < pcmInt16.length; i++) {
+                    float32Data[i] = pcmInt16[i] / 32768;
+                }
+                var audioCtx = new AudioContext({ sampleRate: 24000 });
+                var audioBuffer = audioCtx.createBuffer(1, float32Data.length, 24000);
+                audioBuffer.getChannelData(0).set(float32Data);
+                var source = audioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioCtx.destination);
+                source.onended = function() { audioCtx.close(); };
+                source.start();
+            } catch (err) {
+                console.warn('播放音频失败:', err);
+            }
+        };
+        reader.onerror = function() { console.warn('读取音频数据失败'); };
+        reader.readAsArrayBuffer(blob);
+        addLog('system', '收到 AI 语音回复');
+    }
+
+    async function toggleCamera() {
+        if (cameraActive) { stopCamera(); return; }
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480, frameRate: 10 }
+            });
+            document.getElementById('localVideo').srcObject = localStream;
+            cameraActive = true;
+            statusBadge.textContent = '摄像头: 已开启';
+            statusBadge.className = 'badge active';
+            addLog('system', '摄像头已开启');
+            startFrameCapture();
+        } catch (err) {
+            addLog('error', '摄像头访问失败: ' + err.message);
+        }
+    }
+
+    function stopCamera() {
+        if (frameInterval) { clearInterval(frameInterval); frameInterval = null; }
+        if (localStream) {
+            localStream.getTracks().forEach(function(t) { t.stop(); });
+            localStream = null;
+        }
+        cameraActive = false;
+        statusBadge.textContent = '摄像头: 未开启';
+        statusBadge.className = 'badge';
+        addLog('system', '摄像头已关闭');
+    }
+
+    function startFrameCapture() {
+        if (frameInterval) clearInterval(frameInterval);
+        lastFpsTime = Date.now();
+        frameCount = 0;
+        frameInterval = setInterval(function() {
+            captureAndSendFrame();
+            var now = Date.now();
+            if (now - lastFpsTime >= 1000) {
+                fpsBadge.textContent = '帧率: ' + frameCount + ' fps';
+                frameCount = 0;
+                lastFpsTime = now;
+            }
+        }, 200);
+    }
+
+    function captureAndSendFrame() {
+        var video = document.getElementById('localVideo');
+        if (!video || !video.videoWidth) return;
+        var canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        var base64 = canvas.toDataURL('image/jpeg', 0.5);
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+                type: 'camera_frame',
+                imageData: base64,
+                format: 'jpeg',
+                width: canvas.width,
+                height: canvas.height,
+                timestamp: Date.now()
+            }));
+        }
+    }
+
+    async function toggleMic() {
+        if (micActive) { stopMic(); return; }
+        try {
+            micStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true }
+            });
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'start_asr' }));
+            }
+            audioContext = new AudioContext({ sampleRate: 16000 });
+            var source = audioContext.createMediaStreamSource(micStream);
+            var processor = audioContext.createScriptProcessor(4096, 1, 1);
+            processor.onaudioprocess = function(e) {
+                var input = e.inputBuffer.getChannelData(0);
+                var pcmData = new Int16Array(input.length);
+                for (var i = 0; i < input.length; i++) {
+                    var s = Math.max(-1, Math.min(1, input[i]));
+                    pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(pcmData.buffer);
+                }
+            };
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+            scriptProcessor = processor;
+            micActive = true;
+            micBadge.textContent = '麦克风: 已开启';
+            micBadge.className = 'badge active';
+            btnMic.textContent = '关闭麦克风';
+            btnMic.className = 'btn-danger';
+            addLog('system', '麦克风已开启');
+        } catch (err) {
+            addLog('error', '麦克风访问失败: ' + err.message);
+        }
+    }
+
+    function stopMic() {
+        if (scriptProcessor) { scriptProcessor.disconnect(); scriptProcessor = null; }
+        if (audioContext) { audioContext.close().catch(function() {}); audioContext = null; }
+        if (micStream) { micStream.getTracks().forEach(function(t) { t.stop(); }); micStream = null; }
+        micActive = false;
+        micBadge.textContent = '麦克风: 未开启';
+        micBadge.className = 'badge';
+        btnMic.textContent = '麦克风';
+        btnMic.className = 'btn-secondary';
+        addLog('system', '麦克风已关闭');
+    }
+
+    function updateStatus(state, text) {
+        var el = document.getElementById('statusText');
+        el.textContent = text;
+        el.className = 'status-' + state;
+    }
+
+    function addLog(type, text) {
+        var container = document.getElementById('logContainer');
+        var entry = document.createElement('div');
+        entry.className = 'log-entry ' + type;
+        var time = new Date().toLocaleTimeString();
+        entry.innerHTML = '<span class="log-time">' + time + '</span>' + text;
+        container.appendChild(entry);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // 页面加载时加载对话列表
+    loadConversations();
+</script>
+</body>
+</html>

@@ -8,7 +8,6 @@ import com.alibaba.dashscope.audio.asr.recognition.Recognition;
 import com.alibaba.dashscope.audio.asr.recognition.RecognitionParam;
 import com.alibaba.dashscope.audio.asr.recognition.RecognitionResult;
 import com.alibaba.dashscope.common.ResultCallback;
-import com.alibaba.dashscope.utils.Constants;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +55,6 @@ public class AsrServiceImpl implements IAsrService {
         log.info("开始语音识别: sessionId={}", sessionId);
 
         sessionService.touchSession(sessionId);
-        Constants.baseWebsocketApiUrl = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
 
         try {
             CountDownLatch latch = new CountDownLatch(1);
@@ -111,7 +109,6 @@ public class AsrServiceImpl implements IAsrService {
     @Override
     public void startSession(String sessionId) {
         log.info("启动 ASR 会话: sessionId={}", sessionId);
-        Constants.baseWebsocketApiUrl = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
 
         Recognition recognition = new Recognition();
         connectionMap.put(sessionId, recognition);
@@ -126,9 +123,13 @@ public class AsrServiceImpl implements IAsrService {
         if (recognition != null) {
             try {
                 recognition.stop();
+            } catch (Exception e) {
+                log.debug("停止 ASR 时状态异常（可能未启动）: {}", e.getMessage());
+            }
+            try {
                 recognition.getDuplexApi().close(1000, "bye");
             } catch (Exception e) {
-                log.warn("关闭ASR会话失败", e);
+                log.warn("关闭 ASR WebSocket 连接失败", e);
             }
         }
     }
@@ -143,7 +144,6 @@ public class AsrServiceImpl implements IAsrService {
     public void startStreaming(String sessionId, Consumer<AsrResponseEntity> callback) {
         log.info("启动流式 ASR: sessionId={}", sessionId);
         streamingCallbacks.put(sessionId, callback);
-        Constants.baseWebsocketApiUrl = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
 
         Recognition recognition = connectionMap.computeIfAbsent(sessionId, k -> new Recognition());
         try {

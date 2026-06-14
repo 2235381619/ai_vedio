@@ -119,6 +119,17 @@
             </testResource>
         </testResources>
         <plugins>
+            <!-- 资源过滤时排除 Live2D 二进制文件(.moc3/.moc)，避免被当文本重编码损坏 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <nonFilteredFileExtensions>
+                        <nonFilteredFileExtension>moc3</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>moc</nonFilteredFileExtension>
+                    </nonFilteredFileExtensions>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
