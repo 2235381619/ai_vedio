@@ -189,7 +189,7 @@ public class TtsServiceImpl implements ITtsService {
     @Override
     public void endSession(String sessionId) {
         log.info("结束 TTS 会话: sessionId={}", sessionId);
-        sessionService.closeSession(sessionId);
+        // 仅拆除 TTS 连接，不关闭会话（会话关闭统一在 WebSocket 断开时处理）
         QwenTtsRealtime tts = connectionMap.remove(sessionId);
         if (tts != null) {
             try {
@@ -205,7 +205,7 @@ public class TtsServiceImpl implements ITtsService {
     @Override
     public void cancelSession(String sessionId) {
         log.info("取消 TTS 会话: sessionId={}", sessionId);
-        sessionService.closeSession(sessionId);
+        // 中断仅取消当前 TTS 播放，不关闭会话
         QwenTtsRealtime tts = connectionMap.remove(sessionId);
         if (tts != null) {
             try {

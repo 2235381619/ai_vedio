@@ -231,10 +231,12 @@ public class AgentFlowServiceImpl implements IAgentFlowService {
             if (responseText == null) {
                 var textOutput = state.value("text_output");
                 if (textOutput.isPresent()) {
-                    AgentOutput agentOutput = extractAgentOutput(textOutput.get());
-                    if (agentOutput != null && agentOutput.getResponse() != null && !agentOutput.getResponse().isBlank()) {
-                        responseText = agentOutput.getResponse();
-                        instruction = agentOutput.getInstruction();
+                    // text_agent 产出的是“自然语言”最终回答（已完成工具调用）。
+                    // 回复内容原样使用，只额外做一次“无工具”的语气判定，得到 instruction 供 TTS 使用。
+                    String rawText = extractText(textOutput.get());
+                    if (rawText != null && !rawText.isBlank()) {
+                        responseText = rawText;
+                        instruction = classifyInstruction(rawText);
                     }
                 }
             }
@@ -270,6 +272,73 @@ public class AgentFlowServiceImpl implements IAgentFlowService {
         } finally {
             SessionContextHolder.clear();
         }
+    }
+
+    /**
+     * 从 text_output 中提取自然语言文本。
+     * text_agent 的 outputKey 存的是模型最终的 AssistantMessage（见 AgentLlmNode）。
+     */
+    private String extractText(Object value) {
+        if (value == null) return null;
+        if (value instanceof AssistantMessage am) {
+            return am.getText();
+        }
+        if (value instanceof Message m) {
+            return m.getText();
+        }
+        String s = value.toString();
+        // 兜底：从 toString() 中尽量抽出 textContent= 后面的内容
+        int idx = s.indexOf("textContent=");
+        if (idx >= 0) {
+            int start = idx + "textContent=".length();
+            int end = s.indexOf(", metadata=", start);
+            if (end < 0) end = s.indexOf(']', start);
+            s = end > start ? s.substring(start, end) : s.substring(start);
+        }
+        return s.trim();
+    }
+
+    /** 可选的朗读语气；默认温和自然。 */
+    private static final List<String> INSTRUCTIONS = List.of(
+            "用开心兴奋的语气朗读",
+            "用低沉悲伤的语气朗读",
+            "用温柔关切的语气朗读",
+            "用惊讶的语气朗读",
+            "用自然温和的语气朗读");
+    private static final String DEFAULT_INSTRUCTION = "用自然温和的语气朗读";
+
+    /**
+     * 根据回复内容判定朗读语气。
+     * 这是一次“无工具”的轻量调用，只返回语气标签，不改写回复内容，
+     * 因此既能保留语气，又不会干扰 text_agent 的工具调用循环。
+     */
+    private String classifyInstruction(String text) {
+        try {
+            String result = ChatClient.builder(textChatModel).build().prompt()
+                    .user(u -> u.text("""
+                            根据下面这段文本的情绪，选择最合适的朗读语气，只回复其中一项的完整文字，不要任何额外说明：
+                            - 用开心兴奋的语气朗读
+                            - 用低沉悲伤的语气朗读
+                            - 用温柔关切的语气朗读
+                            - 用惊讶的语气朗读
+                            - 用自然温和的语气朗读
+
+                            文本：{text}""")
+                            .param("text", text))
+                    .call()
+                    .content();
+            if (result != null) {
+                String trimmed = result.trim();
+                for (String ins : INSTRUCTIONS) {
+                    if (trimmed.contains(ins)) {
+                        return ins;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("语气判定失败，使用默认语气: {}", e.getMessage());
+        }
+        return DEFAULT_INSTRUCTION;
     }
 
     private AgentOutput extractAgentOutput(Object value) {

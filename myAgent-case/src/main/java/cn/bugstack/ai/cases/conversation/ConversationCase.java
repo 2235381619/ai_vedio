@@ -9,6 +9,7 @@ import cn.bugstack.ai.domain.agent.model.entity.TtsResponseEntity;
 import cn.bugstack.ai.domain.agent.service.IAgentFlowService;
 import cn.bugstack.ai.domain.agent.service.IAsrService;
 import cn.bugstack.ai.domain.agent.service.ITtsService;
+import cn.bugstack.ai.domain.session.service.ISessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -29,15 +30,18 @@ public class ConversationCase implements IConversationCase {
     private static final int MAX_REQUESTS_PER_MINUTE = 20;
 
     private final ISessionRateLimiter rateLimiter;
+    private final ISessionService sessionService;
 
     public ConversationCase(ISessionRateLimiter rateLimiter,
                             IAsrService asrService,
                             IAgentFlowService agentFlowService,
-                            ITtsService ttsService) {
+                            ITtsService ttsService,
+                            ISessionService sessionService) {
         this.rateLimiter = rateLimiter;
         this.asrService = asrService;
         this.agentFlowService = agentFlowService;
         this.ttsService = ttsService;
+        this.sessionService = sessionService;
     }
 
     @Override
@@ -66,6 +70,8 @@ public class ConversationCase implements IConversationCase {
         log.info("结束全部会话: sessionId={}", sessionId);
         asrService.endSession(sessionId);
         ttsService.endSession(sessionId);
+        // 会话的真正关闭只在此处（WebSocket 断开时）发生
+        sessionService.closeSession(sessionId);
         lastInputTime.remove(sessionId);
         lastInputText.remove(sessionId);
         rateLimiter.reset(sessionId);

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Service
@@ -30,6 +31,7 @@ public class AsrServiceImpl implements IAsrService {
 
     private final Map<String, Recognition> connectionMap = new ConcurrentHashMap<>();
     private final Map<String, Consumer<AsrResponseEntity>> streamingCallbacks = new ConcurrentHashMap<>();
+    private final Map<String, CountDownLatch> readyLatches = new ConcurrentHashMap<>();
 
     private final ISessionService sessionService;
 
@@ -118,7 +120,17 @@ public class AsrServiceImpl implements IAsrService {
     public void endSession(String sessionId) {
         log.info("结束 ASR 会话: sessionId={}", sessionId);
         streamingCallbacks.remove(sessionId);
-        sessionService.closeSession(sessionId);
+
+        // 清理就绪信号，释放可能正在等待的线程
+        CountDownLatch readyLatch = readyLatches.remove(sessionId);
+        if (readyLatch != null) {
+            readyLatch.countDown();
+        }
+
+        // 注意：这里只拆除 ASR 识别连接，不能关闭整个会话。
+        // 每次说完话前端都会发 end_asr，而该次发话对应的 AI 应答+TTS 仍在异步进行，
+        // 若此处关闭会话，TTS 再 touchSession 就会抛“会话已关闭”。
+        // 会话的关闭统一交给 WebSocket 断开时的 ConversationCase.endSession 处理。
         Recognition recognition = connectionMap.remove(sessionId);
         if (recognition != null) {
             try {
@@ -145,6 +157,10 @@ public class AsrServiceImpl implements IAsrService {
         log.info("启动流式 ASR: sessionId={}", sessionId);
         streamingCallbacks.put(sessionId, callback);
 
+        // 创建就绪信号，用于等待 ASR WebSocket 连接建立
+        CountDownLatch readyLatch = new CountDownLatch(1);
+        readyLatches.put(sessionId, readyLatch);
+
         Recognition recognition = connectionMap.computeIfAbsent(sessionId, k -> new Recognition());
         try {
             recognition.call(param, new ResultCallback<RecognitionResult>() {
@@ -170,15 +186,21 @@ public class AsrServiceImpl implements IAsrService {
 
                 @Override
                 public void onComplete() {
+                    readyLatch.countDown();
                     log.debug("ASR 流式识别完成: sessionId={}", sessionId);
                 }
 
                 @Override
                 public void onError(Exception e) {
+                    readyLatch.countDown();
                     log.error("ASR 流式识别错误: sessionId={}", sessionId, e);
                 }
             });
+            // call() 返回即表示 WebSocket 连接已建立、task-started 已确认（task-started 不会进入 onEvent，
+            // 而 onEvent 只在收到音频后才有识别结果）。因此在此处标记就绪，避免与 sendAudioChunk 形成循环等待。
+            readyLatch.countDown();
         } catch (Exception e) {
+            readyLatch.countDown();
             log.error("启动流式 ASR 失败: sessionId={}", sessionId, e);
             streamingCallbacks.remove(sessionId);
         }
@@ -186,6 +208,20 @@ public class AsrServiceImpl implements IAsrService {
 
     @Override
     public void sendAudioChunk(String sessionId, byte[] audioData) {
+        // 等待 ASR WebSocket 连接就绪，避免在 idle 状态下发送音频帧
+        CountDownLatch readyLatch = readyLatches.get(sessionId);
+        if (readyLatch != null) {
+            try {
+                if (!readyLatch.await(3, TimeUnit.SECONDS)) {
+                    log.warn("ASR 连接就绪超时，丢弃音频帧: sessionId={}", sessionId);
+                    return;
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+
         Recognition recognition = connectionMap.get(sessionId);
         if (recognition != null) {
             try {

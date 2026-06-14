@@ -75,6 +75,7 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
                     break;
                 case "end_asr":
                     conversationCase.endAsr(sessionId);
+                    session.getAttributes().remove("asrStarted");
                     break;
                 case "cancel":
                     conversationCase.cancel(sessionId);
@@ -140,6 +141,7 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
 
     private void handleText(String sessionId, String text, Long conversationId) throws IOException {
         ConversationResult result = conversationCase.processText(sessionId, text, conversationId);
+
         if (result == null) {
             log.warn("文本处理返回空，跳过: sessionId={}", sessionId);
             return;

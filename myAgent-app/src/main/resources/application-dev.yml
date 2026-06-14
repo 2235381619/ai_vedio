@@ -5,6 +5,9 @@ server:
       max-binary-message-size: 1048576
       max-text-message-size: 1048576
 
+
+
+
 # 线程池配置
 thread:
   pool:
@@ -35,6 +38,16 @@ spring:
   type: com.zaxxer.hikari.HikariDataSource
 
   ai:
+    # MCP 客户端配置 — 连接本地 Python MCP Server
+    mcp:
+      client:
+        enabled: true        # 启用 MCP Client
+        type: SYNC           # 同步模式（非 WebFlux）
+        request-timeout: 30s # 调用 MCP 工具的超时时间
+        toolcallback:
+          enabled: true      # 自动将 MCP 工具注册为 Spring AI ToolCallback
+        stdio:
+          servers-configuration: classpath:/mcp-servers-config.json
     dashscope:
         api-key: sk-72e36f58a14945b18b9e27692fa092d7
     deepseek:
