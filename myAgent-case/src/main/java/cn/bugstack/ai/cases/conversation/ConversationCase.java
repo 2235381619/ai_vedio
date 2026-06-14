@@ -1,6 +1,7 @@
 package cn.bugstack.ai.cases.conversation;
 
 import cn.bugstack.ai.cases.model.ConversationResult;
+import cn.bugstack.ai.domain.session.service.ISessionRateLimiter;
 import cn.bugstack.ai.domain.agent.model.entity.AgentRequestEntity;
 import cn.bugstack.ai.domain.agent.model.entity.AgentResponseEntity;
 import cn.bugstack.ai.domain.agent.model.entity.TtsRequestEntity;
@@ -25,10 +26,15 @@ public class ConversationCase implements IConversationCase {
     private final Map<String, Long> lastInputTime = new ConcurrentHashMap<>();
     private final Map<String, String> lastInputText = new ConcurrentHashMap<>();
     private static final long DEBOUNCE_MS = 3000;
+    private static final int MAX_REQUESTS_PER_MINUTE = 20;
 
-    public ConversationCase(IAsrService asrService,
+    private final ISessionRateLimiter rateLimiter;
+
+    public ConversationCase(ISessionRateLimiter rateLimiter,
+                            IAsrService asrService,
                             IAgentFlowService agentFlowService,
                             ITtsService ttsService) {
+        this.rateLimiter = rateLimiter;
         this.asrService = asrService;
         this.agentFlowService = agentFlowService;
         this.ttsService = ttsService;
@@ -52,6 +58,7 @@ public class ConversationCase implements IConversationCase {
         ttsService.cancelSession(sessionId);
         lastInputTime.remove(sessionId);
         lastInputText.remove(sessionId);
+        rateLimiter.reset(sessionId);
     }
 
     @Override
@@ -61,6 +68,7 @@ public class ConversationCase implements IConversationCase {
         ttsService.endSession(sessionId);
         lastInputTime.remove(sessionId);
         lastInputText.remove(sessionId);
+        rateLimiter.reset(sessionId);
     }
 
     @Override
@@ -79,6 +87,12 @@ public class ConversationCase implements IConversationCase {
         }
         lastInputText.put(sessionId, text);
         lastInputTime.put(sessionId, now);
+
+        // 限流检查：每分钟最多 MAX_REQUESTS_PER_MINUTE 次
+        if (!rateLimiter.tryAcquire(sessionId, MAX_REQUESTS_PER_MINUTE)) {
+            log.warn("请求被限流: sessionId={}", sessionId);
+            return null;
+        }
 
         log.info("处理文本: sessionId={}, text={}", sessionId, text);
 
