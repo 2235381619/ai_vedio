@@ -1,7 +1,7 @@
 package cn.bugstack.ai.infrastructure.repository;
 
-import cn.bugstack.ai.domain.agent.adapter.repository.SessionRepository;
-import cn.bugstack.ai.domain.agent.model.entity.SessionEntity;
+import cn.bugstack.ai.domain.session.adapter.repository.SessionRepository;
+import cn.bugstack.ai.domain.session.model.entity.SessionEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 

@@ -1,20 +1,12 @@
-package cn.bugstack.ai.domain.agent.service.Rag.chunk.strategy;
+package cn.bugstack.ai.domain.agent.service.rag.chunk.strategy;
 
 import cn.bugstack.ai.domain.agent.model.entity.SplitterConfig;
-import cn.bugstack.ai.domain.agent.service.Rag.chunk.TextSplitterStrategy;
+import cn.bugstack.ai.domain.agent.service.rag.chunk.TextSplitterStrategy;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-/**
- * Markdown 标题切分策略
- * <p>
- * 按 Markdown 标题层级（# ## ###）分块，保留标题层级结构到 metadata。
- * 检索时可以带上标题上下文，让 LLM 知道内容所属的章节。
- * <p>
- * 适用于 Markdown 格式的技术文档、API 文档、Wiki 页面。
- */
 @Component
 public class MarkdownHeaderSplitter implements TextSplitterStrategy {
 
@@ -31,9 +23,6 @@ public class MarkdownHeaderSplitter implements TextSplitterStrategy {
         return split(documents, SplitterConfig.defaults());
     }
 
-    /**
-     * 带配置的切分
-     */
     @Override
     public List<Document> split(List<Document> documents, SplitterConfig config) {
         List<String> headingLevels = config.getHeadingLevels() != null && !config.getHeadingLevels().isEmpty()

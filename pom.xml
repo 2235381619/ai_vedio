@@ -14,6 +14,7 @@
         <module>myAgent-trigger</module>
         <module>myAgent-infrastructure</module>
         <module>myAgent-types</module>
+        <module>myAgent-case</module>
     </modules>
 
     <repositories>
@@ -180,6 +181,11 @@
             <dependency>
                 <groupId>cn.bugstack.ai</groupId>
                 <artifactId>myAgent-trigger</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.bugstack.ai</groupId>
+                <artifactId>myAgent-case</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
         </dependencies>

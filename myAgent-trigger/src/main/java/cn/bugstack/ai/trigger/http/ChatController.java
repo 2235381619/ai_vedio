@@ -6,8 +6,8 @@ import cn.bugstack.ai.api.response.Response;
 import cn.bugstack.ai.domain.agent.adapter.repository.IChatRepository;
 import cn.bugstack.ai.domain.agent.model.entity.ChatConversationEntity;
 import cn.bugstack.ai.domain.agent.model.entity.ChatMessageEntity;
-import cn.bugstack.ai.domain.agent.model.entity.SessionEntity;
-import cn.bugstack.ai.domain.agent.service.ISessionService;
+import cn.bugstack.ai.domain.session.model.entity.SessionEntity;
+import cn.bugstack.ai.domain.session.service.ISessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 

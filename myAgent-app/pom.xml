@@ -92,6 +92,10 @@
             <groupId>cn.bugstack.ai</groupId>
             <artifactId>myAgent-infrastructure</artifactId>
         </dependency>
+        <dependency>
+            <groupId>cn.bugstack.ai</groupId>
+            <artifactId>myAgent-case</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

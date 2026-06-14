@@ -1,5 +1,6 @@
 package cn.bugstack.ai.config;
 
+import cn.bugstack.ai.cases.websocket.SpeechWebSocketHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

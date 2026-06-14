@@ -1,20 +1,12 @@
-package cn.bugstack.ai.domain.agent.service.Rag.chunk.strategy;
+package cn.bugstack.ai.domain.agent.service.rag.chunk.strategy;
 
 import cn.bugstack.ai.domain.agent.model.entity.SplitterConfig;
-import cn.bugstack.ai.domain.agent.service.Rag.chunk.TextSplitterStrategy;
+import cn.bugstack.ai.domain.agent.service.rag.chunk.TextSplitterStrategy;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-/**
- * 递归分隔符切分策略
- * <p>
- * 按分隔符优先级递归切分，尽量保住语义完整性。
- * 优先级：段落(\n\n) > 行(\n) > 句号(。！？) > 逗号(，；) > 空格 > 字符
- * <p>
- * 适用于文章、代码、结构化文本。作为通用首选的切分策略。
- */
 @Component
 public class RecursiveCharacterSplitter implements TextSplitterStrategy {
 
@@ -34,9 +26,6 @@ public class RecursiveCharacterSplitter implements TextSplitterStrategy {
         return split(documents, SplitterConfig.defaults());
     }
 
-    /**
-     * 带配置的切分，供其他策略内部调用（如 SemanticSplitter、MarkdownHeaderSplitter）
-     */
     @Override
     public List<Document> split(List<Document> documents, SplitterConfig config) {
         List<Document> result = new ArrayList<>();
