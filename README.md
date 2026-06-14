@@ -1,6 +1,7 @@
 # AI 视频语音对话助手
 
 基于 Spring AI Alibaba + DashScope 多模态大模型的实时视频语音对话助手。
+链接:https://www.bilibili.com/video/BV1jgJK6bE3d/
 
 ## 项目概述
 
