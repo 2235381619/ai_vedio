@@ -58,7 +58,7 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
         sessionManager.registerSession(sessionId, session);
         sessionService.touchSession(sessionId);
         log.info("WebSocket 连接已建立: sessionId={}", sessionId);
-        session.sendMessage(new TextMessage(JSON.toJSONString(new Message("connected", sessionId))));
+        sessionManager.sendText(sessionId, JSON.toJSONString(new Message("connected", sessionId)));
     }
 
     @Override
@@ -151,9 +151,8 @@ public class SpeechWebSocketHandler extends AbstractWebSocketHandler {
             return;
         }
 
-        WebSocketSession wsSession = sessionManager.getSession(sessionId);
-        if (wsSession != null && wsSession.isOpen()) {
-            wsSession.sendMessage(new BinaryMessage(result.getAudioData()));
+        if (sessionManager.isOpen(sessionId)) {
+            sessionManager.sendBinary(sessionId, result.getAudioData());
             sessionManager.sendMessage(sessionId, msg -> {
                 msg.put("type", "tts_done");
                 msg.put("sessionId", sessionId);
